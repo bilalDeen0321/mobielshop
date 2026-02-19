@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Product extends Model
 {
     protected $fillable = [
-        'category_id', 'name', 'slug', 'base_price', 'brand', 'condition', 'is_active'
+        'category_id', 'name', 'slug', 'base_price', 'brand', 'condition', 'is_active',
+        'description', 'payment_info', 'shipping_info', 'returns_info', 'warranty_info', 'other_policies',
     ];
 
     protected $casts = [
@@ -25,5 +26,10 @@ class Product extends Model
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class);
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 }

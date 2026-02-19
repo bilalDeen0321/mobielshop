@@ -55,5 +55,7 @@ class DatabaseSeeder extends Seeder
                 'quantity' => 10,
             ]);
         }
+
+        $this->call(ProductDetailSeeder::class);
     }
 }

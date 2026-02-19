@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class ProductVariant extends Model
 {
-    protected $fillable = ['product_id', 'sku', 'variant_name', 'price'];
+    protected $fillable = ['product_id', 'sku', 'variant_name', 'price', 'color', 'storage', 'condition'];
 
     protected $casts = [
         'price' => 'decimal:2',

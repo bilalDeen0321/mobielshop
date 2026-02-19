@@ -1,5 +1,5 @@
 @php
-    $image = 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=400&fit=crop';
+    $image = $product->images->first()?->url ?? 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=400&fit=crop';
     $price = $product->variants->min('price') ?? $product->base_price;
     $maxPrice = $product->variants->max('price');
     $originalPrice = $maxPrice && $maxPrice > $price ? $maxPrice : null;

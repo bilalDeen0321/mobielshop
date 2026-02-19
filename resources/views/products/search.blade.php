@@ -19,15 +19,129 @@
         </button>
     </form>
 
-    @if($query)
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        @forelse($products as $product)
-            @include('products.partials.card', ['product' => $product])
-        @empty
-            <p class="col-span-full text-center text-gray-500 py-16">No results found for "{{ $query }}".</p>
-        @endforelse
+    <div class="flex flex-col lg:flex-row gap-8">
+        {{-- Left sidebar filters --}}
+        <aside class="lg:w-56 shrink-0">
+            <form action="{{ route('search') }}" method="get" id="search-filters-form" class="space-y-6 bg-white border border-gray-200 rounded-lg p-4 sticky top-4">
+                @if($query)
+                    <input type="hidden" name="q" value="{{ $query }}">
+                @endif
+
+                {{-- Price range --}}
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3">Price range</h3>
+                    <div class="flex items-center gap-2">
+                        <label class="sr-only">Min price</label>
+                        <input type="number" name="min_price" id="filter-min-price" min="{{ (int) $priceMin }}" max="{{ (int) $priceMax }}" step="1"
+                            value="{{ $minPrice !== null ? (int) $minPrice : (int) $priceMin }}"
+                            class="w-full h-9 px-2 rounded-md border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Min">
+                        <span class="text-gray-400">–</span>
+                        <label class="sr-only">Max price</label>
+                        <input type="number" name="max_price" id="filter-max-price" min="{{ (int) $priceMin }}" max="{{ (int) $priceMax }}" step="1"
+                            value="{{ $maxPrice !== null ? (int) $maxPrice : (int) $priceMax }}"
+                            class="w-full h-9 px-2 rounded-md border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Max">
+                    </div>
+                    <div class="mt-2">
+                        <input type="range" id="price-slider-min" min="{{ (int) $priceMin }}" max="{{ (int) $priceMax }}" value="{{ $minPrice !== null ? (int) $minPrice : (int) $priceMin }}" class="w-full h-2 accent-primary">
+                        <input type="range" id="price-slider-max" min="{{ (int) $priceMin }}" max="{{ (int) $priceMax }}" value="{{ $maxPrice !== null ? (int) $maxPrice : (int) $priceMax }}" class="w-full h-2 accent-primary mt-1">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">£<span id="price-display-min">{{ $minPrice !== null ? (int) $minPrice : (int) $priceMin }}</span> – £<span id="price-display-max">{{ $maxPrice !== null ? (int) $maxPrice : (int) $priceMax }}</span></p>
+                </div>
+
+                {{-- Category --}}
+                @if($filterCategories->isNotEmpty())
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-900 mb-2">Category</h3>
+                        <ul class="space-y-1">
+                            <li>
+                                <a href="{{ route('search', array_filter(['q' => $query ?: null, 'min_price' => $minPrice > 0 ? $minPrice : null, 'max_price' => $maxPrice > 0 && $maxPrice < 9999 ? $maxPrice : null, 'brand' => $brand ?: null])) }}"
+                                    class="text-sm {{ !$categorySlug ? 'font-medium text-primary' : 'text-gray-600 hover:text-primary' }}">All categories</a>
+                            </li>
+                            @foreach($filterCategories as $cat)
+                                <li>
+                                    <a href="{{ route('search', array_filter(['q' => $query ?: null, 'category' => $cat->slug, 'min_price' => $minPrice > 0 ? $minPrice : null, 'max_price' => $maxPrice > 0 && $maxPrice < 9999 ? $maxPrice : null, 'brand' => $brand ?: null])) }}"
+                                        class="text-sm {{ $categorySlug === $cat->slug ? 'font-medium text-primary' : 'text-gray-600 hover:text-primary' }}">{{ $cat->name }}</a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                {{-- Brand --}}
+                @if($filterBrands->isNotEmpty())
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-900 mb-2">Brand</h3>
+                        <ul class="space-y-1">
+                            <li>
+                                <a href="{{ route('search', array_filter(['q' => $query ?: null, 'category' => $categorySlug ?: null, 'min_price' => $minPrice > 0 ? $minPrice : null, 'max_price' => $maxPrice > 0 && $maxPrice < 9999 ? $maxPrice : null])) }}"
+                                    class="text-sm {{ !$brand ? 'font-medium text-primary' : 'text-gray-600 hover:text-primary' }}">All brands</a>
+                            </li>
+                            @foreach($filterBrands as $b)
+                                <li>
+                                    <a href="{{ route('search', array_filter(['q' => $query ?: null, 'category' => $categorySlug ?: null, 'brand' => $b, 'min_price' => $minPrice > 0 ? $minPrice : null, 'max_price' => $maxPrice > 0 && $maxPrice < 9999 ? $maxPrice : null])) }}"
+                                        class="text-sm {{ $brand === $b ? 'font-medium text-primary' : 'text-gray-600 hover:text-primary' }}">{{ $b }}</a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <button type="submit" class="w-full py-2 rounded-md bg-primary text-white text-sm font-semibold hover:opacity-90">Apply filters</button>
+            </form>
+        </aside>
+
+        {{-- Results --}}
+        <div class="flex-1 min-w-0">
+            @if($query || $minPrice !== null || $maxPrice !== null || $categorySlug || $brand)
+                <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                    @forelse($products as $product)
+                        @include('products.partials.card', ['product' => $product])
+                    @empty
+                        <p class="col-span-full text-center text-gray-500 py-16">
+                            No results found.
+                            @if($query) Try a different search or filters. @endif
+                        </p>
+                    @endforelse
+                </div>
+                {{ $products->withQueryString()->links() }}
+            @else
+                <p class="text-center text-gray-500 py-16">Enter a search term (e.g. <strong>iphone</strong>) or use the filters to browse.</p>
+            @endif
+        </div>
     </div>
-    {{ $products->appends(['q' => $query])->links() }}
-    @endif
 </div>
+
+@push('scripts')
+<script>
+(function () {
+    var form = document.getElementById('search-filters-form');
+    var minInput = document.getElementById('filter-min-price');
+    var maxInput = document.getElementById('filter-max-price');
+    var minSlider = document.getElementById('price-slider-min');
+    var maxSlider = document.getElementById('price-slider-max');
+    var minDisplay = document.getElementById('price-display-min');
+    var maxDisplay = document.getElementById('price-display-max');
+    var absMin = parseInt(minSlider.min, 10);
+    var absMax = parseInt(minSlider.max, 10);
+
+    function updateMin(val) {
+        val = Math.min(Math.max(parseInt(val, 10) || absMin, absMin), maxInput.value ? Math.min(parseInt(maxInput.value, 10), absMax) : absMax);
+        minInput.value = val;
+        minSlider.value = val;
+        minDisplay.textContent = val;
+    }
+    function updateMax(val) {
+        val = Math.max(Math.min(parseInt(val, 10) || absMax, absMax), minInput.value ? Math.max(parseInt(minInput.value, 10), absMin) : absMin);
+        maxInput.value = val;
+        maxSlider.value = val;
+        maxDisplay.textContent = val;
+    }
+
+    if (minSlider) minSlider.addEventListener('input', function () { updateMin(this.value); });
+    if (maxSlider) maxSlider.addEventListener('input', function () { updateMax(this.value); });
+    if (minInput) minInput.addEventListener('change', function () { updateMin(this.value); });
+    if (maxInput) maxInput.addEventListener('change', function () { updateMax(this.value); });
+})();
+</script>
+@endpush
 @endsection

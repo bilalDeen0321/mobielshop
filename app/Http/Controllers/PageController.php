@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 
 class PageController extends Controller
@@ -52,9 +53,11 @@ class PageController extends Controller
     public function cart(Request $request)
     {
         $cart = $request->session()->get('cart', []);
-        $cartItems = collect($cart)->map(function ($qty, $id) {
-            $product = Product::find($id);
-            return $product ? ['product' => $product, 'quantity' => $qty] : null;
+        $variantIds = array_keys($cart);
+        $variants = ProductVariant::with('product', 'inventory')->whereIn('id', $variantIds)->get()->keyBy('id');
+        $cartItems = collect($cart)->map(function ($qty, $variantId) use ($variants) {
+            $variant = $variants->get((int) $variantId);
+            return $variant ? ['variant' => $variant, 'product' => $variant->product, 'quantity' => (int) $qty] : null;
         })->filter();
 
         return view('pages.cart', compact('cartItems'));
@@ -71,9 +74,11 @@ class PageController extends Controller
     public function checkout(Request $request)
     {
         $cart = $request->session()->get('cart', []);
-        $cartItems = collect($cart)->map(function ($item, $id) {
-            $product = Product::find($id);
-            return $product ? ['product' => $product, 'quantity' => $item] : null;
+        $variantIds = array_keys($cart);
+        $variants = ProductVariant::with('product', 'inventory')->whereIn('id', $variantIds)->get()->keyBy('id');
+        $cartItems = collect($cart)->map(function ($qty, $variantId) use ($variants) {
+            $variant = $variants->get((int) $variantId);
+            return $variant ? ['variant' => $variant, 'product' => $variant->product, 'quantity' => (int) $qty] : null;
         })->filter();
 
         return view('pages.checkout', compact('cartItems'));

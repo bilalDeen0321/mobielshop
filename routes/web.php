@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\AuthController as AdminAuthController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProductController;
@@ -12,6 +14,7 @@ Route::get('/shop', [ProductController::class, 'index'])->name('shop');
 Route::get('/collections/all', [ProductController::class, 'index'])->name('collections.all');
 Route::get('/collections/{brand}', [ProductController::class, 'index'])->name('collections.brand');
 Route::get('/search', [ProductController::class, 'search'])->name('search');
+Route::get('/search/suggest', [ProductController::class, 'suggest'])->name('search.suggest');
 Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product.show');
 
 Route::get('/about', [PageController::class, 'about'])->name('about');
@@ -35,3 +38,14 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register')->middleware('guest');
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+
+// Admin (separate guard)
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('login', [AdminAuthController::class, 'showLogin'])->name('login')->middleware('admin.guest');
+    Route::post('login', [AdminAuthController::class, 'login']);
+    Route::post('logout', [AdminAuthController::class, 'logout'])->name('logout')->middleware('admin.auth');
+
+    Route::middleware('admin.auth')->group(function () {
+        Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+    });
+});

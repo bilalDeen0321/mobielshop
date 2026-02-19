@@ -33,14 +33,14 @@
             </div>
         </div>
     </div>
-    @php $total = $cartItems->sum(fn ($i) => $i['product']->base_price * $i['quantity']); @endphp
+    @php $total = $cartItems->sum(fn ($i) => (float) $i['variant']->price * $i['quantity']); @endphp
     <aside class="border border-gray-200 rounded-md p-4 bg-white h-fit space-y-3">
         <h2 class="text-base font-semibold text-gray-900">Order summary</h2>
         <div class="space-y-1 text-xs text-gray-500 max-h-40 overflow-auto">
             @foreach($cartItems as $item)
             <div class="flex justify-between gap-2">
-                <span class="truncate">{{ $item['quantity'] }} × {{ $item['product']->name }}</span>
-                <span class="whitespace-nowrap">£{{ number_format($item['product']->base_price * $item['quantity'], 2) }}</span>
+                <span class="truncate">{{ $item['quantity'] }} × {{ $item['product']->name }}{!! $item['variant']->variant_name ? ' (' . e($item['variant']->variant_name) . ')' : '' !!}</span>
+                <span class="whitespace-nowrap">£{{ number_format((float) $item['variant']->price * $item['quantity'], 2) }}</span>
             </div>
             @endforeach
         </div>
