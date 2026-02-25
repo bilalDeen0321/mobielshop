@@ -12,9 +12,9 @@
                 extend: {
                     fontFamily: { display: ['Plus Jakarta Sans', 'sans-serif'] },
                     colors: {
-                        primary: '#00b4d8',
-                        accent: '#f59e0b',
-                        nav: '#0f172a',
+                        primary: '{{ $themePrimary ?? "#00b4d8" }}',
+                        accent: '{{ $themeAccent ?? "#f59e0b" }}',
+                        nav: '{{ $themeSecondary ?? "#0f172a" }}',
                     }
                 }
             }

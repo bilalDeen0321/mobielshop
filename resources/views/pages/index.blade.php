@@ -3,26 +3,43 @@
 @section('title', 'LowPricePhones - Best Deals on Unlocked Phones')
 
 @section('content')
-<section class="relative overflow-hidden">
-    <div class="relative">
-        <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=1200&h=600&fit=crop" alt="Latest smartphones"
-            class="w-full h-[300px] sm:h-[400px] md:h-[480px] object-cover">
-        <div class="absolute inset-0 bg-gradient-to-r from-gray-900/70 via-gray-900/30 to-transparent"></div>
-        <div class="absolute inset-0 flex items-center">
-            <div class="container mx-auto px-4">
-                <p class="text-sm sm:text-base font-medium mb-2 text-accent">New Arrivals 2025</p>
-                <h2 class="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold leading-tight mb-3 text-white">
-                    Latest Smartphones <br><span class="text-primary">Best Prices</span>
-                </h2>
-                <p class="text-sm sm:text-base text-white/90 mb-6 max-w-sm">
-                    Discover amazing deals on the latest phones, tablets and accessories. Free shipping on orders over £250.
-                </p>
-                <a href="{{ route('shop') }}" class="inline-flex items-center gap-2 bg-primary text-white px-7 py-3 rounded-lg font-semibold text-sm hover:opacity-90">
-                    Shop Now
-                </a>
+<section class="relative overflow-hidden hero-slider-section">
+    <div class="hero-slider relative w-full h-[300px] sm:h-[400px] md:h-[480px]">
+        @foreach($slides as $i => $slide)
+        <div class="hero-slide absolute inset-0 w-full h-full {{ $i === 0 ? 'active' : '' }}" data-index="{{ $i }}">
+            <img src="{{ $slide['url'] }}" alt="{{ $slide['caption'] ?? 'Slide' }}"
+                class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-r from-gray-900/70 via-gray-900/30 to-transparent"></div>
+            <div class="absolute inset-0 flex items-center">
+                <div class="container mx-auto px-4">
+                    <p class="text-sm sm:text-base font-medium mb-2 text-accent">New Arrivals 2025</p>
+                    <h2 class="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold leading-tight mb-3 text-white">
+                        Latest Smartphones <br><span class="text-primary">Best Prices</span>
+                    </h2>
+                    <p class="text-sm sm:text-base text-white/90 mb-6 max-w-sm">
+                        Discover amazing deals on the latest phones, tablets and accessories. Free shipping on orders over £250.
+                    </p>
+                    <a href="{{ route('shop') }}" class="inline-flex items-center gap-2 bg-primary text-white px-7 py-3 rounded-lg font-semibold text-sm hover:opacity-90">
+                        Shop Now
+                    </a>
+                </div>
             </div>
         </div>
+        @endforeach
     </div>
+    @if(count($slides) > 1)
+    <button type="button" class="hero-slider-prev absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition" aria-label="Previous slide">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <button type="button" class="hero-slider-next absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition" aria-label="Next slide">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </button>
+    <div class="hero-slider-dots absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2">
+        @foreach($slides as $i => $slide)
+        <button type="button" class="hero-dot w-2.5 h-2.5 rounded-full {{ $i === 0 ? 'bg-primary' : 'bg-white/60 hover:bg-white/80' }}" data-index="{{ $i }}" aria-label="Go to slide {{ $i + 1 }}"></button>
+        @endforeach
+    </div>
+    @endif
 </section>
 
 <section class="py-10 bg-gray-100">
@@ -99,4 +116,39 @@
         </div>
     </div>
 </section>
+
+@push('head')
+<style>
+.hero-slider-section .hero-slide { opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
+.hero-slider-section .hero-slide.active { opacity: 1; pointer-events: auto; z-index: 1; }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+(function() {
+    var $section = $('.hero-slider-section');
+    var $slides = $section.find('.hero-slide');
+    var $dots = $section.find('.hero-dot');
+    var total = $slides.length;
+    if (total <= 1) return;
+    var current = 0;
+    var interval;
+    function goTo(i) {
+        current = (i + total) % total;
+        $slides.removeClass('active').eq(current).addClass('active');
+        $dots.removeClass('bg-primary').addClass('bg-white/60').eq(current).removeClass('bg-white/60').addClass('bg-primary');
+    }
+    function next() { goTo(current + 1); }
+    function startInterval() {
+        if (interval) clearInterval(interval);
+        interval = setInterval(next, 5000);
+    }
+    $section.find('.hero-slider-next').on('click', function() { next(); startInterval(); });
+    $section.find('.hero-slider-prev').on('click', function() { goTo(current - 1); startInterval(); });
+    $dots.on('click', function() { goTo(parseInt($(this).data('index'), 10)); startInterval(); });
+    startInterval();
+})();
+</script>
+@endpush
 @endsection

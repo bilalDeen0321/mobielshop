@@ -1,0 +1,473 @@
+@extends('admin.layout')
+
+@section('title', 'Products')
+
+@section('content')
+<h3 class="page-title"> Products
+    <small>list & manage</small>
+</h3>
+<div class="page-bar">
+    <ul class="page-breadcrumb">
+        <li>
+            <i class="icon-home"></i>
+            <a href="{{ route('admin.dashboard') }}">Home</a>
+            <i class="fa fa-angle-right"></i>
+        </li>
+        <li><span>Products</span></li>
+    </ul>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="portlet light">
+            <div class="portlet-title">
+                <div class="caption font-dark">
+                    <i class="icon-basket font-dark"></i>
+                    <span class="caption-subject bold uppercase">Products</span>
+                </div>
+                <div class="actions">
+                    <button type="button" class="btn btn-sm green" id="btn-add-product"> Add New
+                        <i class="fa fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="portlet-body">
+                <div class="table-scrollable">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th> # </th>
+                                <th> Name </th>
+                                <th> Category </th>
+                                <th> Brand </th>
+                                <th> Price </th>
+                                <th> Status </th>
+                                <th> Actions </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($products as $product)
+                            <tr>
+                                <td> {{ $product->id }} </td>
+                                <td> {{ $product->name }} </td>
+                                <td> {{ $product->category->name ?? '-' }} </td>
+                                <td> {{ $product->brand ?? '-' }} </td>
+                                <td> {{ number_format($product->base_price, 2) }} </td>
+                                <td>
+                                    @if($product->is_active)
+                                        <span class="label label-sm label-success"> Active </span>
+                                    @else
+                                        <span class="label label-sm label-default"> Inactive </span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-xs blue btn-edit-product" data-id="{{ $product->id }}"> Edit </button>
+                                    <form action="{{ route('admin.products.destroy', $product) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this product?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-xs red"> Delete </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="7" class="text-center">No products yet. <button type="button" class="btn btn-link p-0" id="btn-add-product-empty">Add one</button>.</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">
+                    {{ $products->links() }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="productModal" tabindex="-1" role="dialog" aria-labelledby="productModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="border-bottom: 1px solid #eef1f5; padding: 15px 20px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="margin-top: 0;"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="productModalLabel" style="margin: 0; font-weight: 600;">
+                    <i class="icon-basket"></i> Add New Product
+                </h4>
+            </div>
+            <form id="product-form" name="product-form">
+                <div class="modal-body" style="padding: 20px 20px 10px; max-height: 70vh; overflow-y: auto;">
+                    <div id="product-modal-errors" class="alert alert-danger" style="display:none;">
+                        <ul class="mb-0 list-unstyled" id="product-modal-errors-list"></ul>
+                    </div>
+
+                    <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                    <input type="hidden" id="product-edit-id" name="product_edit_id" value="">
+
+                    <div class="form-section" style="margin-bottom: 24px;">
+                        <h5 style="margin: 0 0 14px 0; padding-bottom: 8px; border-bottom: 2px solid #3598dc; color: #3598dc; font-weight: 600;">Basic information</h5>
+                        <div class="form-group" id="product-existing-images-wrap" style="display: none;">
+                            <label>Existing images</label>
+                            <div id="product-existing-images" class="row" style="margin-bottom: 12px;"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Product images</label>
+                            <div id="product-images-dropzone" class="dropzone product-image-dropzone" style="min-height: 140px; border: 2px dashed #3598dc; border-radius: 6px; background: #fafafa;">
+                                <div class="dz-message" style="margin: 2em 0; color: #3598dc;">
+                                    <i class="fa fa-cloud-upload" style="font-size: 32px; display: block; margin-bottom: 8px;"></i>
+                                    Drop images here or click to upload (max 5MB each)
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="product-category">Category <span class="required" style="color:#e73d4a;">*</span></label>
+                                    <select id="product-category" name="category_id" class="form-control">
+                                        <option value="">Select category</option>
+                                        @foreach($categories as $cat)
+                                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="product-name">Product name <span class="required" style="color:#e73d4a;">*</span></label>
+                                    <input type="text" id="product-name" name="name" class="form-control" placeholder="Enter product name" maxlength="255">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="product-slug">Slug</label>
+                                    <input type="text" id="product-slug" name="slug" class="form-control" placeholder="Leave blank to auto-generate" maxlength="255">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="product-price">Base price <span class="required" style="color:#e73d4a;">*</span></label>
+                                    <input type="number" id="product-price" name="base_price" class="form-control" step="0.01" min="0" value="0" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="product-brand">Brand</label>
+                                    <input type="text" id="product-brand" name="brand" class="form-control" placeholder="Brand" maxlength="255">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="product-condition">Condition</label>
+                                    <input type="text" id="product-condition" name="condition" class="form-control" value="New" placeholder="e.g. New, Refurbished" maxlength="255">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group" style="margin-top: 28px;">
+                                    <label class="mt-checkbox mt-checkbox-outline" style="font-weight: normal;">
+                                        <input type="checkbox" name="is_active" value="1" id="product-active" checked> Active (visible in store)
+                                        <span></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section" style="margin-bottom: 20px;">
+                        <h5 style="margin: 0 0 14px 0; padding-bottom: 8px; border-bottom: 2px solid #e0e0e0; color: #555; font-weight: 600;">Description & policies</h5>
+                        <div class="form-group">
+                            <label for="product-description">Description</label>
+                            <textarea id="product-description" name="description" class="form-control" rows="3" placeholder="Product description"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="product-payment">Payment info</label>
+                                    <textarea id="product-payment" name="payment_info" class="form-control" rows="2" placeholder="We accept credit/debit cards and PayPal. Full payment at checkout."></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="product-shipping">Shipping info</label>
+                                    <textarea id="product-shipping" name="shipping_info" class="form-control" rows="2" placeholder="Standard delivery 3–5 business days. Free shipping on orders over $50."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="product-returns">Returns info</label>
+                                    <textarea id="product-returns" name="returns_info" class="form-control" rows="2" placeholder="30-day return policy. Item must be unused and in original packaging."></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="product-warranty">Warranty info</label>
+                                    <textarea id="product-warranty" name="warranty_info" class="form-control" rows="2" placeholder="1-year manufacturer warranty. Proof of purchase required."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-other">Other policies</label>
+                            <textarea id="product-other" name="other_policies" class="form-control" rows="2" placeholder="All sales subject to our terms of service. Contact us for bulk orders."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid #eef1f5; padding: 12px 20px;">
+                    <button type="button" class="btn default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn green" id="product-form-submit">
+                        <i class="fa fa-check"></i> Save product
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('styles')
+<link href="{{ asset('admin/theme/assets/global/plugins/dropzone/dropzone.min.css') }}" rel="stylesheet" type="text/css" />
+<style>
+#productModal .form-group { margin-bottom: 16px; }
+#productModal .product-image-dropzone.dz-started .dz-message { display: block; margin: 0.5em 0; font-size: 12px; }
+#productModal .form-group:last-child { margin-bottom: 0; }
+#productModal label { font-weight: 500; color: #333; margin-bottom: 6px; display: block; }
+#productModal .form-control { border-radius: 3px; }
+#productModal .modal-body::-webkit-scrollbar { width: 6px; }
+#productModal .modal-body::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+#productModal .modal-body::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+#productModal .form-section h5 { font-size: 14px; }
+#product-form .error { color: #e73d4a; font-size: 12px; margin-top: 4px; }
+#product-form input.error, #product-form select.error { border-color: #e73d4a; }
+</style>
+@endpush
+
+@push('scripts')
+<script src="{{ asset('admin/theme/assets/global/plugins/dropzone/dropzone.min.js') }}"></script>
+<script>
+if (typeof Dropzone !== 'undefined') { Dropzone.autoDiscover = false; }
+</script>
+<script src="{{ asset('admin/theme/assets/global/plugins/jquery-validation/js/jquery.validate.min.js') }}"></script>
+<script src="{{ asset('admin/theme/assets/global/plugins/jquery-validation/js/additional-methods.min.js') }}"></script>
+<script>
+(function() {
+    var modal = $('#productModal');
+    var form = $('#product-form');
+    var errorsDiv = $('#product-modal-errors');
+    var errorsList = $('#product-modal-errors-list');
+    var storeUrl = '{{ route("admin.products.store") }}';
+    var baseProductsUrl = '{{ url("admin-panel/products") }}';
+    var validator;
+    var productDropzone;
+    var productDeleteImageIds = [];
+
+    function initDropzone() {
+        if (productDropzone) return;
+        if (typeof Dropzone === 'undefined') return;
+        try {
+            productDropzone = new Dropzone('#product-images-dropzone', {
+                url: '#',
+                autoProcessQueue: false,
+                addRemoveLinks: true,
+                acceptedFiles: 'image/*',
+                maxFilesize: 5,
+                dictDefaultMessage: '',
+                dictRemoveFile: 'Remove',
+                dictFileTooBig: 'File is too big. Max 5MB.',
+                init: function() {
+                    this.on('addedfile', function() {
+                        if (this.files.length > 10) this.removeFile(this.files[0]);
+                    });
+                }
+            });
+            window.productDropzone = productDropzone;
+        } catch (e) { console.warn('Dropzone init:', e); }
+    }
+
+    var defaultPolicyText = {
+        payment: 'We accept credit/debit cards and PayPal. Full payment at checkout.',
+        shipping: 'Standard delivery 3–5 business days. Free shipping on orders over $50.',
+        returns: '30-day return policy. Item must be unused and in original packaging.',
+        warranty: '1-year manufacturer warranty. Proof of purchase required.',
+        other: 'All sales subject to our terms of service. Contact us for bulk orders.'
+    };
+
+    function resetForm() {
+        form[0].reset();
+        form.find('#product-edit-id').val('');
+        form.find('#product-price').val('0');
+        form.find('#product-condition').val('New');
+        form.find('#product-active').prop('checked', true);
+        form.find('#product-payment').val(defaultPolicyText.payment);
+        form.find('#product-shipping').val(defaultPolicyText.shipping);
+        form.find('#product-returns').val(defaultPolicyText.returns);
+        form.find('#product-warranty').val(defaultPolicyText.warranty);
+        form.find('#product-other').val(defaultPolicyText.other);
+        errorsDiv.hide().find('ul').empty();
+        productDeleteImageIds = [];
+        $('#product-existing-images-wrap').hide().find('#product-existing-images').empty();
+        if (validator) validator.resetForm();
+        if (window.productDropzone) try { window.productDropzone.removeAllFiles(true); } catch (e) {}
+    }
+
+    function renderExistingImages(images) {
+        var container = $('#product-existing-images');
+        container.empty();
+        if (!images || !images.length) return;
+        images.forEach(function(img) {
+            var src = img.full_url || img.url;
+            var col = $('<div class="col-md-2 col-xs-4" style="margin-bottom:10px;"></div>');
+            var wrap = $('<div style="position:relative;"></div>');
+            var thumb = $('<img>').attr('src', src).css({ width: '100%', height: '70px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #ddd' }).on('error', function() { $(this).attr('src', 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="60"/>'); });
+            var rem = $('<button type="button" class="btn btn-xs red" style="position:absolute;top:2px;right:2px;">&times;</button>');
+            rem.on('click', function() {
+                productDeleteImageIds.push(img.id);
+                col.fadeOut(200, function() { col.remove(); });
+            });
+            wrap.append(thumb).append(rem);
+            col.append(wrap);
+            container.append(col);
+        });
+        $('#product-existing-images-wrap').show();
+    }
+
+    $(document).on('click', '#btn-add-product, #btn-add-product-empty', function(e) {
+        e.preventDefault();
+        resetForm();
+        $('#productModalLabel').html('<i class="icon-basket"></i> Add New Product');
+        modal.modal('show');
+        setTimeout(function() {
+            initDropzone();
+            form.find('#product-category').focus();
+        }, 350);
+    });
+
+    $(document).on('click', '.btn-edit-product', function(e) {
+        e.preventDefault();
+        var id = $(this).data('id');
+        if (!id) return;
+        resetForm();
+        initDropzone();
+        $('#productModalLabel').html('<i class="icon-basket"></i> Edit Product');
+        var editUrl = baseProductsUrl + '/' + id;
+        fetch(editUrl, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                var p = data.product;
+                if (!p) return;
+                form.find('#product-edit-id').val(p.id);
+                form.find('#product-category').val(p.category_id);
+                form.find('#product-name').val(p.name);
+                form.find('#product-slug').val(p.slug || '');
+                form.find('#product-price').val(p.base_price);
+                form.find('#product-brand').val(p.brand || '');
+                form.find('#product-condition').val(p.condition || 'New');
+                form.find('#product-active').prop('checked', !!p.is_active);
+                form.find('#product-description').val(p.description || '');
+                form.find('#product-payment').val(p.payment_info || defaultPolicyText.payment);
+                form.find('#product-shipping').val(p.shipping_info || defaultPolicyText.shipping);
+                form.find('#product-returns').val(p.returns_info || defaultPolicyText.returns);
+                form.find('#product-warranty').val(p.warranty_info || defaultPolicyText.warranty);
+                form.find('#product-other').val(p.other_policies || defaultPolicyText.other);
+                renderExistingImages(p.images || []);
+                modal.modal('show');
+                setTimeout(function() { form.find('#product-category').focus(); }, 300);
+            })
+            .catch(function() {
+                alert('Could not load product. Try again.');
+            });
+    });
+
+    validator = form.validate({
+        rules: {
+            category_id: { required: true },
+            name: { required: true, maxlength: 255 },
+            slug: { maxlength: 255 },
+            base_price: { required: true, number: true, min: 0 },
+            brand: { maxlength: 255 },
+            condition: { maxlength: 255 }
+        },
+        messages: {
+            category_id: { required: 'Please select a category.' },
+            name: { required: 'Please enter the product name.' },
+            base_price: {
+                required: 'Please enter the base price.',
+                number: 'Please enter a valid number.',
+                min: 'Price cannot be negative.'
+            }
+        },
+        errorClass: 'error',
+        validClass: 'valid',
+        errorElement: 'span',
+        errorPlacement: function(error, element) {
+            error.appendTo(element.closest('.form-group'));
+        },
+        highlight: function(element) {
+            $(element).addClass('error').closest('.form-group').addClass('has-error');
+        },
+        unhighlight: function(element) {
+            $(element).removeClass('error').closest('.form-group').removeClass('has-error');
+        }
+    });
+
+    form.on('submit', function(e) {
+        e.preventDefault();
+        if (!form.valid()) return;
+
+        var submitBtn = $('#product-form-submit');
+        var formData = new FormData(form[0]);
+        formData.append('is_active', form.find('#product-active').is(':checked') ? '1' : '0');
+        var editId = form.find('#product-edit-id').val();
+        if (editId) {
+            formData.append('_method', 'PUT');
+            productDeleteImageIds.forEach(function(id) {
+                formData.append('delete_image_ids[]', id);
+            });
+        }
+        if (window.productDropzone && window.productDropzone.getAcceptedFiles().length) {
+            window.productDropzone.getAcceptedFiles().forEach(function(f) {
+                formData.append('images[]', f, f.name);
+            });
+        }
+
+        var submitUrl = editId ? (baseProductsUrl + '/' + editId) : storeUrl;
+        errorsDiv.hide().find('ul').empty();
+        submitBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
+
+        fetch(submitUrl, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
+        .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, status: res.status, data: data }; }); })
+        .then(function(result) {
+            submitBtn.prop('disabled', false).html('<i class="fa fa-check"></i> Save product');
+            if (result.ok) {
+                modal.modal('hide');
+                location.reload();
+            } else {
+                if (result.data && result.data.errors) {
+                    for (var field in result.data.errors) {
+                        if (result.data.errors.hasOwnProperty(field)) {
+                            result.data.errors[field].forEach(function(msg) {
+                                errorsList.append('<li>' + msg + '</li>');
+                            });
+                        }
+                    }
+                } else {
+                    errorsList.append('<li>' + (result.data && result.data.message ? result.data.message : 'An error occurred.') + '</li>');
+                }
+                errorsDiv.show();
+            }
+        })
+        .catch(function() {
+            submitBtn.prop('disabled', false).html('<i class="fa fa-check"></i> Save product');
+            errorsList.append('<li>Network error. Please try again.</li>');
+            errorsDiv.show();
+        });
+    });
+})();
+</script>
+@endpush

@@ -1,7 +1,10 @@
 <?php
 
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProductController;
@@ -39,13 +42,25 @@ Route::get('/register', [AuthController::class, 'showRegister'])->name('register
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
-// Admin (separate guard)
-Route::prefix('admin')->name('admin.')->group(function () {
-    Route::get('login', [AdminAuthController::class, 'showLogin'])->name('login')->middleware('admin.guest');
-    Route::post('login', [AdminAuthController::class, 'login']);
+// Redirect /admin to /admin-panel (so Laravel admin routes work; public/admin is used for theme assets)
+Route::get('admin', fn () => redirect()->route('admin.dashboard'))->name('admin.redirect');
+
+// Admin (separate guard) - use 'admin-panel' so /admin can serve theme assets from public/admin
+Route::prefix('admin-panel')->name('admin.')->group(function () {
+    Route::middleware('admin.guest')->group(function () {
+        Route::get('login', [AdminAuthController::class, 'showLogin'])->name('login');
+        Route::post('login', [AdminAuthController::class, 'login']);
+    });
     Route::post('logout', [AdminAuthController::class, 'logout'])->name('logout')->middleware('admin.auth');
 
     Route::middleware('admin.auth')->group(function () {
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::resource('products', AdminProductController::class)->names('products');
+        Route::resource('categories', AdminCategoryController::class)->names('categories');
+        Route::get('settings', [AdminSettingsController::class, 'index'])->name('settings.index');
+        Route::post('settings/theme', [AdminSettingsController::class, 'updateTheme'])->name('settings.theme');
+        Route::post('settings/slider', [AdminSettingsController::class, 'uploadSlider'])->name('settings.slider.upload');
+        Route::delete('settings/slider/{slider}', [AdminSettingsController::class, 'deleteSlider'])->name('settings.slider.delete');
+        Route::post('settings/slider/reorder', [AdminSettingsController::class, 'reorderSlider'])->name('settings.slider.reorder');
     });
 });

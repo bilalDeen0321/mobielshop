@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\SliderImage;
 use Illuminate\Http\Request;
 
 class PageController extends Controller
@@ -17,7 +18,20 @@ class PageController extends Controller
             ->limit(8)
             ->get();
 
-        return view('pages.index', compact('featuredProducts'));
+        $sliderImages = SliderImage::orderBy('sort_order')->get();
+        $defaultSlides = [
+            ['url' => 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=1200&h=600&fit=crop', 'caption' => 'Latest smartphones'],
+            ['url' => 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=1200&h=600&fit=crop', 'caption' => 'Best Prices'],
+            ['url' => 'https://images.unsplash.com/photo-1592286927505-d6d9c2d4b2c1?w=1200&h=600&fit=crop', 'caption' => 'New Arrivals 2025'],
+        ];
+        if ($sliderImages->count() >= 3) {
+            $slides = $sliderImages->map(fn ($img) => ['url' => $img->url, 'caption' => $img->caption])->all();
+        } else {
+            $fromDb = $sliderImages->map(fn ($img) => ['url' => $img->url, 'caption' => $img->caption])->all();
+            $slides = array_merge($fromDb, array_slice($defaultSlides, 0, 3 - count($fromDb)));
+        }
+
+        return view('pages.index', compact('featuredProducts', 'slides'));
     }
 
     public function about()

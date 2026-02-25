@@ -1,26 +1,66 @@
-@extends('layouts.app')
+@extends('admin.layout')
 
-@section('title', 'Admin Dashboard - LowPricePhones')
+@section('title', 'Dashboard')
 
 @section('content')
-<section class="container mx-auto px-4 py-10">
-    <div class="flex items-center justify-between mb-8">
-        <h1 class="text-2xl font-display font-bold text-gray-900">Admin Dashboard</h1>
-        <form method="POST" action="{{ route('admin.logout') }}">
-            @csrf
-            <button type="submit" class="text-sm text-gray-600 hover:text-primary">Logout</button>
-        </form>
-    </div>
-    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 max-w-2xl">
-        <div class="border border-gray-200 rounded-lg p-4 bg-white">
-            <p class="text-sm text-gray-500">Products</p>
-            <p class="text-2xl font-bold text-primary">{{ $productCount }}</p>
+<h3 class="page-title"> Dashboard
+    <small>overview & statistics</small>
+</h3>
+<div class="page-bar">
+    <ul class="page-breadcrumb">
+        <li>
+            <i class="icon-home"></i>
+            <a href="{{ route('admin.dashboard') }}">Home</a>
+            <i class="fa fa-angle-right"></i>
+        </li>
+        <li><span>Dashboard</span></li>
+    </ul>
+</div>
+<div class="row">
+    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+        <div class="dashboard-stat blue">
+            <div class="visual">
+                <i class="fa fa-shopping-cart"></i>
+            </div>
+            <div class="details">
+                <div class="number">
+                    <span data-counter="counterup" data-value="{{ $productCount }}">0</span>
+                </div>
+                <div class="desc"> Products </div>
+            </div>
+            <a class="more" href="{{ route('admin.products.index') }}"> View more
+                <i class="m-icon-swapright m-icon-white"></i>
+            </a>
         </div>
-        <div class="border border-gray-200 rounded-lg p-4 bg-white">
-            <p class="text-sm text-gray-500">Categories</p>
-            <p class="text-2xl font-bold text-primary">{{ $categoryCount }}</p>
+    </div>
+    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+        <div class="dashboard-stat green">
+            <div class="visual">
+                <i class="fa fa-folder"></i>
+            </div>
+            <div class="details">
+                <div class="number">
+                    <span data-counter="counterup" data-value="{{ $categoryCount }}">0</span>
+                </div>
+                <div class="desc"> Categories </div>
+            </div>
+            <a class="more" href="{{ route('admin.categories.index') }}"> View more
+                <i class="m-icon-swapright m-icon-white"></i>
+            </a>
         </div>
     </div>
-    <p class="mt-6 text-sm text-gray-500">You are logged in as admin. Use the links above to manage the store.</p>
-</section>
+</div>
+<div class="clearfix"></div>
 @endsection
+
+@push('scripts')
+<script src="{{ asset('admin/theme/assets/global/plugins/counterup/jquery.waypoints.min.js') }}" type="text/javascript"></script>
+<script src="{{ asset('admin/theme/assets/global/plugins/counterup/jquery.counterup.min.js') }}" type="text/javascript"></script>
+<script type="text/javascript">
+    jQuery(document).ready(function() {
+        if (typeof jQuery.counterUp === 'function') {
+            jQuery('[data-counter="counterup"]').counterUp({ delay: 10, time: 1000 });
+        }
+    });
+</script>
+@endpush
