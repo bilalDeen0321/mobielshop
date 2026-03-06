@@ -17,7 +17,15 @@ class SettingsController extends Controller
         $themeSecondary = Setting::get('theme_secondary', '#0f172a');
         $themeAccent = Setting::get('theme_accent', '#f59e0b');
         $whatsappNumber = Setting::get('whatsapp_number', '');
-        return view('admin.settings.index', compact('sliderImages', 'themePrimary', 'themeSecondary', 'themeAccent', 'whatsappNumber'));
+        $shopName = Setting::get('shop_name', config('app.name'));
+        $shopLogo = Setting::get('shop_logo', '');
+        $currency = Setting::get('currency', '£');
+        $taxPercentage = Setting::get('tax_percentage', '0');
+        $receiptFormat = Setting::get('receipt_format', 'standard');
+        return view('admin.settings.index', compact(
+            'sliderImages', 'themePrimary', 'themeSecondary', 'themeAccent', 'whatsappNumber',
+            'shopName', 'shopLogo', 'currency', 'taxPercentage', 'receiptFormat'
+        ));
     }
 
     public function updateTheme(Request $request)
@@ -76,5 +84,25 @@ class SettingsController extends Controller
             SliderImage::where('id', $id)->update(['sort_order' => $position]);
         }
         return response()->json(['success' => true]);
+    }
+
+    public function updateShop(Request $request)
+    {
+        $request->validate([
+            'shop_name' => ['nullable', 'string', 'max:255'],
+            'currency' => ['nullable', 'string', 'max:10'],
+            'tax_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'receipt_format' => ['nullable', 'string', 'in:standard,minimal'],
+        ]);
+        Setting::set('shop_name', $request->input('shop_name', ''));
+        Setting::set('currency', $request->input('currency', '£'));
+        Setting::set('tax_percentage', $request->input('tax_percentage', '0'));
+        Setting::set('receipt_format', $request->input('receipt_format', 'standard'));
+        if ($request->hasFile('shop_logo')) {
+            $request->validate(['shop_logo' => ['image', 'max:2048']]);
+            $path = $request->file('shop_logo')->store('settings', 'public');
+            Setting::set('shop_logo', $path);
+        }
+        return redirect()->route('admin.settings.index')->with('success', 'Shop settings updated.');
     }
 }

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Sale extends Model
 {
     protected $fillable = [
-        'sale_number', 'customer_name', 'customer_phone', 'customer_email',
+        'sale_number', 'customer_id', 'customer_name', 'customer_phone', 'customer_email',
         'payment_method', 'subtotal', 'tax_rate', 'tax_amount', 'discount_amount', 'total',
         'notes', 'admin_id',
     ];
@@ -30,6 +30,16 @@ class Sale extends Model
     public function admin(): BelongsTo
     {
         return $this->belongsTo(Admin::class, 'admin_id');
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function returns(): HasMany
+    {
+        return $this->hasMany(ReturnModel::class, 'sale_id');
     }
 
     public static function generateSaleNumber(): string

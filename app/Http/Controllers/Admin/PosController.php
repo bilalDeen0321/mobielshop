@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -118,6 +119,15 @@ class PosController extends Controller
                     'line_total' => $lineTotal,
                 ]);
                 $product->decrement('stock_quantity', $qty);
+                StockMovement::create([
+                    'product_id' => $product->id,
+                    'type' => 'sale',
+                    'quantity' => -$qty,
+                    'unit_cost' => $unitPrice,
+                    'reference_type' => 'Sale',
+                    'reference_id' => $sale->id,
+                    'admin_id' => auth()->guard('admin')->id(),
+                ]);
             }
 
             DB::commit();

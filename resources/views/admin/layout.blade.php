@@ -144,10 +144,49 @@
                             <span class="title">Sales</span>
                         </a>
                     </li>
+                    <li class="nav-item {{ request()->routeIs('admin.customers.*') ? 'start active open' : '' }}">
+                        <a href="{{ route('admin.customers.index') }}" class="nav-link">
+                            <i class="icon-users"></i>
+                            <span class="title">Customers</span>
+                        </a>
+                    </li>
+                    <li class="nav-item {{ request()->routeIs('admin.suppliers.*') ? 'start active open' : '' }}">
+                        <a href="{{ route('admin.suppliers.index') }}" class="nav-link">
+                            <i class="icon-briefcase"></i>
+                            <span class="title">Suppliers</span>
+                        </a>
+                    </li>
+                    <li class="nav-item {{ request()->routeIs('admin.purchases.*') ? 'start active open' : '' }}">
+                        <a href="{{ route('admin.purchases.index') }}" class="nav-link">
+                            <i class="icon-basket-loaded"></i>
+                            <span class="title">Purchases</span>
+                        </a>
+                    </li>
+                    <li class="nav-item {{ request()->routeIs('admin.inventory.*') ? 'start active open' : '' }}">
+                        <a href="{{ route('admin.inventory.index') }}" class="nav-link">
+                            <i class="icon-layers"></i>
+                            <span class="title">Inventory</span>
+                            @if(isset($lowStockCount) && $lowStockCount > 0)
+                            <span class="badge badge-danger">{{ $lowStockCount }}</span>
+                            @endif
+                        </a>
+                    </li>
+                    <li class="nav-item {{ request()->routeIs('admin.returns.*') ? 'start active open' : '' }}">
+                        <a href="{{ route('admin.returns.index') }}" class="nav-link">
+                            <i class="icon-arrow-left"></i>
+                            <span class="title">Returns</span>
+                        </a>
+                    </li>
+                    <li class="nav-item {{ request()->routeIs('admin.reports.*') ? 'start active open' : '' }}">
+                        <a href="{{ route('admin.reports.index') }}" class="nav-link">
+                            <i class="icon-graph"></i>
+                            <span class="title">Reports</span>
+                        </a>
+                    </li>
                     <li class="nav-item {{ request()->routeIs('admin.settings.*') ? 'start active open' : '' }}">
                         <a href="{{ route('admin.settings.index') }}" class="nav-link">
                             <i class="icon-settings"></i>
-                            <span class="title">Website Settings</span>
+                            <span class="title">Settings</span>
                         </a>
                     </li>
                 </ul>

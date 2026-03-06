@@ -67,6 +67,7 @@
                 <hr>
                 <a href="{{ route('admin.sales.index') }}" class="btn default">Back to sales</a>
                 <button type="button" class="btn blue" onclick="window.print();"><i class="fa fa-print"></i> Print receipt</button>
+                <a href="{{ route('admin.returns.create', ['sale_id' => $sale->id]) }}" class="btn yellow"><i class="fa fa-undo"></i> Refund / Return</a>
             </div>
         </div>
     </div>

@@ -93,6 +93,66 @@
         <div class="portlet light">
             <div class="portlet-title">
                 <div class="caption font-dark">
+                    <i class="icon-shop font-dark"></i>
+                    <span class="caption-subject bold uppercase">Shop / POS settings</span>
+                </div>
+            </div>
+            <div class="portlet-body">
+                <form action="{{ route('admin.settings.shop') }}" method="POST" enctype="multipart/form-data" class="form-horizontal">
+                    @csrf
+                    <div class="form-group">
+                        <label class="col-md-2 control-label">Shop name</label>
+                        <div class="col-md-6">
+                            <input type="text" name="shop_name" class="form-control" value="{{ $shopName }}" placeholder="e.g. LowPricePhones">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-2 control-label">Shop logo</label>
+                        <div class="col-md-6">
+                            @if($shopLogo)
+                            <p><img src="{{ asset('storage/' . $shopLogo) }}" alt="Logo" style="max-height:60px;"></p>
+                            @endif
+                            <input type="file" name="shop_logo" accept="image/*" class="form-control">
+                            <span class="help-block">Leave empty to keep current logo.</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-2 control-label">Currency</label>
+                        <div class="col-md-2">
+                            <input type="text" name="currency" class="form-control" value="{{ $currency }}" placeholder="e.g. £ or $">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-2 control-label">Default tax %</label>
+                        <div class="col-md-2">
+                            <input type="number" step="0.01" name="tax_percentage" class="form-control" value="{{ $taxPercentage }}" min="0" max="100">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-2 control-label">Receipt format</label>
+                        <div class="col-md-4">
+                            <select name="receipt_format" class="form-control">
+                                <option value="standard" {{ $receiptFormat == 'standard' ? 'selected' : '' }}>Standard</option>
+                                <option value="minimal" {{ $receiptFormat == 'minimal' ? 'selected' : '' }}>Minimal</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-offset-2 col-md-6">
+                            <button type="submit" class="btn green">Save shop settings</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="portlet light">
+            <div class="portlet-title">
+                <div class="caption font-dark">
                     <i class="icon-film font-dark"></i>
                     <span class="caption-subject bold uppercase">Home page slider</span>
                 </div>
