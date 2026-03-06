@@ -12,7 +12,12 @@ class DashboardController extends Controller
     {
         $productCount = Product::count();
         $categoryCount = Category::count();
+        $lowStockProducts = Product::whereColumn('stock_quantity', '<', 'minimum_stock_limit')
+            ->where('minimum_stock_limit', '>', 0)
+            ->orderBy('stock_quantity')
+            ->limit(15)
+            ->get();
 
-        return view('admin.dashboard', compact('productCount', 'categoryCount'));
+        return view('admin.dashboard', compact('productCount', 'categoryCount', 'lowStockProducts'));
     }
 }

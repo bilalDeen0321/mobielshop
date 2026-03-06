@@ -16,7 +16,8 @@ class SettingsController extends Controller
         $themePrimary = Setting::get('theme_primary', '#00b4d8');
         $themeSecondary = Setting::get('theme_secondary', '#0f172a');
         $themeAccent = Setting::get('theme_accent', '#f59e0b');
-        return view('admin.settings.index', compact('sliderImages', 'themePrimary', 'themeSecondary', 'themeAccent'));
+        $whatsappNumber = Setting::get('whatsapp_number', '');
+        return view('admin.settings.index', compact('sliderImages', 'themePrimary', 'themeSecondary', 'themeAccent', 'whatsappNumber'));
     }
 
     public function updateTheme(Request $request)
@@ -30,6 +31,16 @@ class SettingsController extends Controller
         Setting::set('theme_secondary', $request->input('theme_secondary', '#0f172a'));
         Setting::set('theme_accent', $request->input('theme_accent', '#f59e0b'));
         return redirect()->route('admin.settings.index')->with('success', 'Theme colors updated.');
+    }
+
+    public function updateWhatsApp(Request $request)
+    {
+        $request->validate([
+            'whatsapp_number' => ['nullable', 'string', 'max:30'],
+        ]);
+        $number = preg_replace('/[^0-9]/', '', $request->input('whatsapp_number', ''));
+        Setting::set('whatsapp_number', $number);
+        return redirect()->route('admin.settings.index')->with('success', 'WhatsApp number updated.');
     }
 
     public function uploadSlider(Request $request)

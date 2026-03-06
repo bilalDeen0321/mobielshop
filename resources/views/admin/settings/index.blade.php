@@ -59,6 +59,33 @@
             </div>
         </div>
     </div>
+    <div class="col-md-6">
+        <div class="portlet light">
+            <div class="portlet-title">
+                <div class="caption font-dark">
+                    <i class="fa fa-whatsapp font-dark"></i>
+                    <span class="caption-subject bold uppercase">WhatsApp (floating button)</span>
+                </div>
+            </div>
+            <div class="portlet-body">
+                <form action="{{ route('admin.settings.whatsapp') }}" method="POST" class="form-horizontal">
+                    @csrf
+                    <div class="form-group">
+                        <label class="col-md-3 control-label">WhatsApp number</label>
+                        <div class="col-md-8">
+                            <input type="text" name="whatsapp_number" class="form-control" value="{{ $whatsappNumber }}" placeholder="e.g. 447123456789">
+                            <span class="help-block">Include country code, no + or spaces. The floating WhatsApp icon will link to chat with this number.</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-offset-3 col-md-8">
+                            <button type="submit" class="btn green">Save WhatsApp number</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="row">

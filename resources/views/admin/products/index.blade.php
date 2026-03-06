@@ -39,19 +39,34 @@
                                 <th> Name </th>
                                 <th> Category </th>
                                 <th> Brand </th>
-                                <th> Price </th>
+                                <th> Wholesale (cost) </th>
+                                <th> Retail (selling) </th>
+                                <th> Profit </th>
+                                <th> Stock </th>
                                 <th> Status </th>
                                 <th> Actions </th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($products as $product)
+                            @php
+                                $profit = (float) $product->retail_price - (float) $product->wholesale_price;
+                            @endphp
                             <tr>
                                 <td> {{ $product->id }} </td>
                                 <td> {{ $product->name }} </td>
                                 <td> {{ $product->category->name ?? '-' }} </td>
                                 <td> {{ $product->brand ?? '-' }} </td>
-                                <td> {{ number_format($product->base_price, 2) }} </td>
+                                <td> {{ number_format($product->wholesale_price, 2) }} </td>
+                                <td> {{ number_format($product->retail_price, 2) }} </td>
+                                <td> {{ number_format($profit, 2) }} <span class="text-muted">({{ $product->retail_price > 0 ? number_format(($profit / (float) $product->retail_price) * 100, 0) : 0 }}%)</span> </td>
+                                <td>
+                                    @if($product->isLowStock())
+                                        <span class="label label-sm label-danger" title="Below minimum ({{ $product->minimum_stock_limit }})">{{ $product->stock_quantity }}</span>
+                                    @else
+                                        {{ $product->stock_quantity }}
+                                    @endif
+                                </td>
                                 <td>
                                     @if($product->is_active)
                                         <span class="label label-sm label-success"> Active </span>
@@ -70,7 +85,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="7" class="text-center">No products yet. <button type="button" class="btn btn-link p-0" id="btn-add-product-empty">Add one</button>.</td>
+                                <td colspan="10" class="text-center">No products yet. <button type="button" class="btn btn-link p-0" id="btn-add-product-empty">Add one</button>.</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -144,32 +159,81 @@
                                     <input type="text" id="product-slug" name="slug" class="form-control" placeholder="Leave blank to auto-generate" maxlength="255">
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="product-price">Base price <span class="required" style="color:#e73d4a;">*</span></label>
-                                    <input type="number" id="product-price" name="base_price" class="form-control" step="0.01" min="0" value="0" placeholder="0.00">
-                                </div>
-                            </div>
-                            <div class="col-md-3">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="product-brand">Brand</label>
-                                    <input type="text" id="product-brand" name="brand" class="form-control" placeholder="Brand" maxlength="255">
+                                    <select id="product-brand" name="brand_id" class="form-control">
+                                        <option value="">Select brand</option>
+                                        @foreach($brands as $b)
+                                            <option value="{{ $b->id }}">{{ $b->name }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="product-wholesale">Wholesale (buying) price <span class="required" style="color:#e73d4a;">*</span></label>
+                                    <input type="number" id="product-wholesale" name="wholesale_price" class="form-control" step="0.01" min="0" value="0" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="product-retail">Retail (selling) price <span class="required" style="color:#e73d4a;">*</span></label>
+                                    <input type="number" id="product-retail" name="retail_price" class="form-control" step="0.01" min="0" value="0" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="product-condition">Condition</label>
                                     <input type="text" id="product-condition" name="condition" class="form-control" value="New" placeholder="e.g. New, Refurbished" maxlength="255">
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="product-stock">Stock quantity</label>
+                                    <input type="number" id="product-stock" name="stock_quantity" class="form-control" min="0" value="0" placeholder="0">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="product-min-stock">Min. stock (alert below)</label>
+                                    <input type="number" id="product-min-stock" name="minimum_stock_limit" class="form-control" min="0" value="0" placeholder="0">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
                                 <div class="form-group" style="margin-top: 28px;">
                                     <label class="mt-checkbox mt-checkbox-outline" style="font-weight: normal;">
                                         <input type="checkbox" name="is_active" value="1" id="product-active" checked> Active (visible in store)
                                         <span></span>
                                     </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section" style="margin-bottom: 20px;">
+                        <h5 style="margin: 0 0 14px 0; padding-bottom: 8px; border-bottom: 2px solid #e0e0e0; color: #555; font-weight: 600;">Sale</h5>
+                        <div class="form-group">
+                            <label class="mt-checkbox mt-checkbox-outline" style="font-weight: normal;">
+                                <input type="checkbox" name="is_on_sale" value="1" id="product-on-sale"> Mark as On Sale
+                                <span></span>
+                            </label>
+                        </div>
+                        <div class="row" id="product-sale-fields">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="product-sale-discount">Discount (%)</label>
+                                    <input type="number" id="product-sale-discount" name="sale_discount_percent" class="form-control" min="0" max="100" step="0.01" value="0" placeholder="e.g. 10">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Discounted price</label>
+                                    <p class="form-control-static" id="product-discounted-price">—</p>
                                 </div>
                             </div>
                         </div>
@@ -294,11 +358,28 @@ if (typeof Dropzone !== 'undefined') { Dropzone.autoDiscover = false; }
         other: 'All sales subject to our terms of service. Contact us for bulk orders.'
     };
 
+    function updateDiscountedPrice() {
+        var onSale = form.find('#product-on-sale').is(':checked');
+        var retail = parseFloat(form.find('#product-retail').val()) || 0;
+        var discount = parseFloat(form.find('#product-sale-discount').val()) || 0;
+        var el = $('#product-discounted-price');
+        if (!onSale || discount <= 0) { el.text('—'); return; }
+        var discounted = Math.round(retail * (1 - discount / 100) * 100) / 100;
+        el.text('£' + discounted.toFixed(2));
+    }
+    form.find('#product-retail, #product-sale-discount').on('input change', updateDiscountedPrice);
+    form.find('#product-on-sale').on('change', updateDiscountedPrice);
+
     function resetForm() {
         form[0].reset();
         form.find('#product-edit-id').val('');
-        form.find('#product-price').val('0');
-        form.find('#product-condition').val('New');
+        form.find('#product-wholesale').val('0');
+        form.find('#product-retail').val('0');
+        form.find('#product-stock').val('0');
+        form.find('#product-min-stock').val('0');
+        form.find('#product-on-sale').prop('checked', false);
+        form.find('#product-sale-discount').val('0');
+        updateDiscountedPrice();
         form.find('#product-active').prop('checked', true);
         form.find('#product-payment').val(defaultPolicyText.payment);
         form.find('#product-shipping').val(defaultPolicyText.shipping);
@@ -361,8 +442,14 @@ if (typeof Dropzone !== 'undefined') { Dropzone.autoDiscover = false; }
                 form.find('#product-category').val(p.category_id);
                 form.find('#product-name').val(p.name);
                 form.find('#product-slug').val(p.slug || '');
-                form.find('#product-price').val(p.base_price);
-                form.find('#product-brand').val(p.brand || '');
+                form.find('#product-wholesale').val(p.wholesale_price ?? p.base_price ?? '0');
+                form.find('#product-retail').val(p.retail_price ?? p.base_price ?? '0');
+                form.find('#product-stock').val(p.stock_quantity ?? '0');
+                form.find('#product-min-stock').val(p.minimum_stock_limit ?? '0');
+                form.find('#product-on-sale').prop('checked', !!p.is_on_sale);
+                form.find('#product-sale-discount').val(p.sale_discount_percent ?? '0');
+                updateDiscountedPrice();
+                form.find('#product-brand').val(p.brand_id || '');
                 form.find('#product-condition').val(p.condition || 'New');
                 form.find('#product-active').prop('checked', !!p.is_active);
                 form.find('#product-description').val(p.description || '');
@@ -385,15 +472,21 @@ if (typeof Dropzone !== 'undefined') { Dropzone.autoDiscover = false; }
             category_id: { required: true },
             name: { required: true, maxlength: 255 },
             slug: { maxlength: 255 },
-            base_price: { required: true, number: true, min: 0 },
+            wholesale_price: { required: true, number: true, min: 0 },
+            retail_price: { required: true, number: true, min: 0 },
             brand: { maxlength: 255 },
             condition: { maxlength: 255 }
         },
         messages: {
             category_id: { required: 'Please select a category.' },
             name: { required: 'Please enter the product name.' },
-            base_price: {
-                required: 'Please enter the base price.',
+            wholesale_price: {
+                required: 'Please enter the wholesale (buying) price.',
+                number: 'Please enter a valid number.',
+                min: 'Price cannot be negative.'
+            },
+            retail_price: {
+                required: 'Please enter the retail (selling) price.',
                 number: 'Please enter a valid number.',
                 min: 'Price cannot be negative.'
             }

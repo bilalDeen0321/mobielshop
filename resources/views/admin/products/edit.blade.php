@@ -49,15 +49,54 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-md-2 control-label">Base Price <span class="required">*</span></label>
+                            <label class="col-md-2 control-label">Wholesale (buying) price <span class="required">*</span></label>
                             <div class="col-md-8">
-                                <input type="number" name="base_price" class="form-control" step="0.01" min="0" value="{{ old('base_price', $product->base_price) }}" required />
+                                <input type="number" name="wholesale_price" class="form-control" step="0.01" min="0" value="{{ old('wholesale_price', $product->wholesale_price) }}" required />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Retail (selling) price <span class="required">*</span></label>
+                            <div class="col-md-8">
+                                <input type="number" name="retail_price" class="form-control" step="0.01" min="0" value="{{ old('retail_price', $product->retail_price) }}" required />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Stock quantity</label>
+                            <div class="col-md-8">
+                                <input type="number" name="stock_quantity" class="form-control" min="0" value="{{ old('stock_quantity', $product->stock_quantity) }}" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Min. stock (alert below)</label>
+                            <div class="col-md-8">
+                                <input type="number" name="minimum_stock_limit" class="form-control" min="0" value="{{ old('minimum_stock_limit', $product->minimum_stock_limit) }}" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Sale</label>
+                            <div class="col-md-8">
+                                <label class="mt-checkbox mt-checkbox-outline">
+                                    <input type="checkbox" name="is_on_sale" value="1" {{ old('is_on_sale', $product->is_on_sale) ? 'checked' : '' }}> Mark as On Sale
+                                    <span></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Sale discount (%)</label>
+                            <div class="col-md-8">
+                                <input type="number" name="sale_discount_percent" class="form-control" min="0" max="100" step="0.01" value="{{ old('sale_discount_percent', $product->sale_discount_percent ?? 0) }}" placeholder="e.g. 10">
+                                <span class="help-block">Discounted price = @if($product->is_on_sale && $product->sale_price) £{{ number_format($product->sale_price, 2) }} @else — @endif (when on sale).</span>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-md-2 control-label">Brand</label>
                             <div class="col-md-8">
-                                <input type="text" name="brand" class="form-control" value="{{ old('brand', $product->brand) }}" />
+                                <select name="brand_id" class="form-control">
+                                    <option value="">Select brand</option>
+                                    @foreach($brands as $b)
+                                        <option value="{{ $b->id }}" {{ old('brand_id', $product->brand_id) == $b->id ? 'selected' : '' }}>{{ $b->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
                         <div class="form-group">

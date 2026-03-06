@@ -1,10 +1,13 @@
 <?php
 
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
+use App\Http\Controllers\Admin\BrandController as AdminBrandController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
+use App\Http\Controllers\Admin\PosController as AdminPosController;
+use App\Http\Controllers\Admin\SalesController as AdminSalesController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProductController;
@@ -57,10 +60,17 @@ Route::prefix('admin-panel')->name('admin.')->group(function () {
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::resource('products', AdminProductController::class)->names('products');
         Route::resource('categories', AdminCategoryController::class)->names('categories');
+        Route::resource('brands', AdminBrandController::class)->names('brands');
         Route::get('settings', [AdminSettingsController::class, 'index'])->name('settings.index');
         Route::post('settings/theme', [AdminSettingsController::class, 'updateTheme'])->name('settings.theme');
+        Route::post('settings/whatsapp', [AdminSettingsController::class, 'updateWhatsApp'])->name('settings.whatsapp');
         Route::post('settings/slider', [AdminSettingsController::class, 'uploadSlider'])->name('settings.slider.upload');
         Route::delete('settings/slider/{slider}', [AdminSettingsController::class, 'deleteSlider'])->name('settings.slider.delete');
         Route::post('settings/slider/reorder', [AdminSettingsController::class, 'reorderSlider'])->name('settings.slider.reorder');
+        Route::get('pos', [AdminPosController::class, 'index'])->name('pos.index');
+        Route::get('pos/search-products', [AdminPosController::class, 'searchProducts'])->name('pos.search');
+        Route::post('pos/complete-sale', [AdminPosController::class, 'completeSale'])->name('pos.complete');
+        Route::get('sales', [AdminSalesController::class, 'index'])->name('sales.index');
+        Route::get('sales/{sale}', [AdminSalesController::class, 'show'])->name('sales.show');
     });
 });

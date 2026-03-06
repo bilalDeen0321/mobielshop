@@ -12,7 +12,8 @@
             <div class="space-y-4">
                 @foreach($cartItems as $item)
                 <div class="flex items-center gap-4 border border-gray-200 rounded-md p-3 bg-white">
-                    <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=100&h=100&fit=crop" alt="{{ $item['product']->name }}" class="w-16 h-16 object-contain bg-gray-100 rounded-md">
+                    @php $img = $item['product']->images->first(); @endphp
+                    <img src="{{ $img ? asset($img->url) : 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=100&h=100&fit=crop' }}" alt="{{ $item['product']->name }}" class="w-16 h-16 object-contain bg-gray-100 rounded-md">
                     <div class="flex-1">
                         <p class="text-sm font-semibold text-gray-900">{{ $item['product']->name }}</p>
                         <p class="text-xs text-gray-500">{{ $item['product']->brand }}{!! $item['variant']->variant_name ? ' · ' . e($item['variant']->variant_name) : '' !!}</p>

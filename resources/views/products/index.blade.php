@@ -6,7 +6,13 @@
 <div class="relative h-40 md:h-52 bg-cover bg-center flex items-center justify-center" style="background-image: url('https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=1200&h=400&fit=crop')">
     <div class="absolute inset-0 bg-gray-900/40"></div>
     <h1 class="relative text-3xl md:text-4xl font-display font-bold text-white z-10">
-        {{ $brand ? $brand . ' Phones' : 'Products' }}
+        @if(isset($isSalePage) && $isSalePage)
+            Sale
+        @elseif(isset($brandModel) && $brandModel)
+            {{ $brandModel->name ?? 'Products' }}
+        @else
+            Products
+        @endif
     </h1>
 </div>
 

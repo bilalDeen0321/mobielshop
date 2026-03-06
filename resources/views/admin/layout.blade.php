@@ -70,6 +70,9 @@
                         <a href="{{ route('admin.dashboard') }}" class="nav-link">
                             <i class="icon-home"></i>
                             <span class="title">Dashboard</span>
+                            @if(isset($lowStockCount) && $lowStockCount > 0)
+                            <span class="badge badge-danger">{{ $lowStockCount }}</span>
+                            @endif
                         </a>
                     </li>
                     <li class="nav-item {{ request()->routeIs('admin.products.*') ? 'start active open' : '' }}">
@@ -109,6 +112,37 @@
                                 </a>
                             </li>
                         </ul>
+                    </li>
+                    <li class="nav-item {{ request()->routeIs('admin.brands.*') ? 'start active open' : '' }}">
+                        <a href="javascript:;" class="nav-link nav-toggle">
+                            <i class="icon-tag"></i>
+                            <span class="title">Brands</span>
+                            <span class="arrow {{ request()->routeIs('admin.brands.*') ? 'open' : '' }}"></span>
+                        </a>
+                        <ul class="sub-menu">
+                            <li class="nav-item">
+                                <a href="{{ route('admin.brands.index') }}" class="nav-link">
+                                    <span class="title">List Brands</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('admin.brands.create') }}" class="nav-link">
+                                    <span class="title">Add Brand</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item {{ request()->routeIs('admin.pos.*') ? 'start active open' : '' }}">
+                        <a href="{{ route('admin.pos.index') }}" class="nav-link">
+                            <i class="icon-handbag"></i>
+                            <span class="title">Point of Sale</span>
+                        </a>
+                    </li>
+                    <li class="nav-item {{ request()->routeIs('admin.sales.*') ? 'start active open' : '' }}">
+                        <a href="{{ route('admin.sales.index') }}" class="nav-link">
+                            <i class="icon-docs"></i>
+                            <span class="title">Sales</span>
+                        </a>
                     </li>
                     <li class="nav-item {{ request()->routeIs('admin.settings.*') ? 'start active open' : '' }}">
                         <a href="{{ route('admin.settings.index') }}" class="nav-link">

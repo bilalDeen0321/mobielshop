@@ -8,6 +8,12 @@ use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
+    /** Cart key for product-without-variant: negative product id. */
+    public static function productOnlyCartKey(int $productId): int
+    {
+        return -$productId;
+    }
+
     public function add(Request $request)
     {
         $request->validate([
@@ -24,17 +30,23 @@ class CartController extends Controller
             if (!$variant) {
                 return back()->with('error', 'Invalid variant.');
             }
+            $cartKey = $variant->id;
         } else {
             $variant = ProductVariant::where('product_id', $productId)->first();
-            if (!$variant) {
-                return back()->with('error', 'Product has no variants.');
+            if ($variant) {
+                $cartKey = $variant->id;
+            } else {
+                $product = Product::find($productId);
+                if (!$product || !$product->is_active) {
+                    return back()->with('error', 'Product is not available.');
+                }
+                $cartKey = self::productOnlyCartKey($productId);
             }
-            $variantId = $variant->id;
         }
 
         $cart = session()->get('cart', []);
         $qty = (int) ($request->quantity ?? 1);
-        $cart[$variantId] = ($cart[$variantId] ?? 0) + $qty;
+        $cart[$cartKey] = ($cart[$cartKey] ?? 0) + $qty;
         session()->put('cart', $cart);
 
         return back()->with('success', 'Product added to cart');

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Brand;
 use App\Models\Product;
 use App\Models\RecentlyViewed;
 use Illuminate\Http\Request;
@@ -14,14 +15,25 @@ class ProductController extends Controller
             ->where('is_active', true)
             ->with(['category', 'variants.inventory']);
 
-        if ($brand = $request->get('brand') ?? $request->route('brand')) {
-            $query->where('brand', $brand);
+        $brandSlug = $request->get('brand') ?? $request->route('brand');
+        $brandModel = null;
+        if ($brandSlug) {
+            $brandModel = Brand::where('slug', $brandSlug)->first();
+            if ($brandModel) {
+                $query->where('brand_id', $brandModel->id);
+            } else {
+                $query->where('brand', $brandSlug);
+            }
         }
 
         if ($category = $request->get('category')) {
             $query->whereHas('category', function ($q) use ($category) {
                 $q->where('slug', $category);
             });
+        }
+
+        if ($request->boolean('sale') || $request->get('sale') === 'true') {
+            $query->where('is_on_sale', true)->whereNotNull('sale_discount_percent');
         }
 
         if ($search = $request->get('q')) {
@@ -41,9 +53,12 @@ class ProductController extends Controller
         };
 
         $products = $query->paginate(20)->withQueryString();
-        $brand = $request->route('brand');
+        if (!$brandModel && $brandSlug) {
+            $brandModel = (object) ['name' => $brandSlug, 'slug' => $brandSlug];
+        }
+        $isSalePage = $request->boolean('sale') || $request->get('sale') === 'true';
 
-        return view('products.index', compact('products', 'brand'));
+        return view('products.index', compact('products', 'brandModel', 'isSalePage'));
     }
 
     public function suggest(Request $request)

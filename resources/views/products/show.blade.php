@@ -55,12 +55,21 @@
 
         <div>
             <p class="text-xs text-gray-500 mb-1">{{ $product->brand }}</p>
+            @if($product->is_on_sale && $product->sale_discount_percent)
+                <span class="inline-block bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded uppercase mb-2">Sale</span>
+            @endif
             <h1 class="text-2xl md:text-3xl font-display font-bold text-gray-900 mb-2">{{ $product->name }}</h1>
 
-            <div class="flex items-baseline gap-3 mb-6">
-                <span id="product-price" class="text-2xl font-bold text-primary">£{{ number_format((float) ($selectedVariant->price ?? $product->base_price), 2) }}</span>
-                @if($variants->max('price') > $variants->min('price'))
-                    <span class="text-sm text-gray-400 line-through">£{{ number_format((float) $variants->max('price'), 2) }}</span>
+            <div class="flex items-baseline gap-3 mb-6 flex-wrap">
+                @if($product->is_on_sale && $product->sale_price !== null)
+                    <span id="product-price" class="text-2xl font-bold text-primary">£{{ number_format((float) $product->sale_price, 2) }}</span>
+                    <span class="text-sm text-gray-400 line-through">£{{ number_format((float) $product->retail_price, 2) }}</span>
+                    <span class="text-sm font-medium text-accent">-{{ number_format((float) $product->sale_discount_percent, 0) }}%</span>
+                @else
+                    <span id="product-price" class="text-2xl font-bold text-primary">£{{ number_format((float) ($selectedVariant->price ?? $product->base_price), 2) }}</span>
+                    @if($variants->max('price') > $variants->min('price'))
+                        <span class="text-sm text-gray-400 line-through">£{{ number_format((float) $variants->max('price'), 2) }}</span>
+                    @endif
                 @endif
             </div>
 
@@ -219,6 +228,8 @@
 (function () {
     var images = @json($images);
     var variants = @json($variantsJson);
+    var productOnSale = {{ $product->is_on_sale && $product->sale_price !== null ? 'true' : 'false' }};
+    var productSalePrice = {{ $product->is_on_sale && $product->sale_price !== null ? (float) $product->sale_price : 'null' }};
 
     if (images.length > 1) {
         document.querySelectorAll('.gallery-thumb').forEach(function (btn) {
@@ -249,7 +260,8 @@
         var v = getSelected();
         if (!v) return;
         document.getElementById('variant_id').value = v.id;
-        document.getElementById('product-price').textContent = '£' + v.price.toFixed(2);
+        var displayPrice = productOnSale && productSalePrice !== null ? productSalePrice : v.price;
+        document.getElementById('product-price').textContent = '£' + displayPrice.toFixed(2);
         var stockEl = document.getElementById('variant-stock');
         var btn = document.getElementById('add-to-cart-btn');
         if (v.stock > 0) {

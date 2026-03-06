@@ -46,14 +46,20 @@
     <div class="container mx-auto px-4">
         <h2 class="text-2xl font-display font-bold text-gray-900 mb-6">Shop By Brand</h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-            @foreach(['Apple', 'Samsung', 'Google', 'Huawei', 'OnePlus', 'Sony'] as $brand)
-            <a href="{{ route('collections.brand', $brand) }}" class="bg-white rounded-lg p-5 flex flex-col items-center gap-3 border border-gray-200 product-card-hover group">
-                <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-primary/10">
-                    <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            @forelse($brands ?? [] as $brand)
+            <a href="{{ route('collections.brand', $brand->slug) }}" class="bg-white rounded-lg p-5 flex flex-col items-center gap-3 border border-gray-200 product-card-hover group">
+                <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-primary/10 overflow-hidden">
+                    @if($brand->image_url)
+                        <img src="{{ $brand->image_url }}" alt="{{ $brand->name }}" class="w-full h-full object-contain p-1">
+                    @else
+                        <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    @endif
                 </div>
-                <p class="font-semibold text-gray-900 text-sm">{{ $brand }}</p>
+                <p class="font-semibold text-gray-900 text-sm">{{ $brand->name }}</p>
             </a>
-            @endforeach
+            @empty
+            <p class="col-span-full text-center text-gray-500 text-sm">No brands yet. Add brands in the admin panel.</p>
+            @endforelse
         </div>
     </div>
 </section>

@@ -19,7 +19,7 @@
             <a href="{{ route('home') }}" class="px-4 py-3.5 text-sm font-medium hover:text-primary {{ request()->routeIs('home') ? 'text-primary' : '' }}">Home</a>
             <a href="{{ route('shop') }}" class="px-4 py-3.5 text-sm font-medium hover:text-primary">Shop</a>
             <a href="{{ route('collections.all') }}" class="px-4 py-3.5 text-sm font-medium hover:text-primary">Collections</a>
-            <a href="{{ route('shop') }}?sale=true" class="px-4 py-3.5 text-sm font-bold text-accent">Sale</a>
+            <a href="{{ route('shop') }}?sale=true" class="px-4 py-3.5 text-sm font-bold text-accent {{ (request()->get('sale') === 'true' || request()->boolean('sale')) ? 'underline' : '' }}">Sale</a>
             <a href="{{ route('about') }}" class="px-4 py-3.5 text-sm font-medium hover:text-primary">About Us</a>
             <a href="{{ route('contact') }}" class="px-4 py-3.5 text-sm font-medium hover:text-primary">Contact</a>
             <a href="{{ route('testimonials') }}" class="px-4 py-3.5 text-sm font-medium hover:text-primary">Testimonial</a>

@@ -51,6 +51,50 @@
     </div>
 </div>
 <div class="clearfix"></div>
+@if(isset($lowStockProducts) && $lowStockProducts->isNotEmpty())
+<div class="row margin-top-20">
+    <div class="col-md-12">
+        <div class="portlet light" style="border-left: 4px solid #e73d4a;">
+            <div class="portlet-title">
+                <div class="caption font-dark">
+                    <i class="fa fa-exclamation-triangle font-red"></i>
+                    <span class="caption-subject bold uppercase">Low stock alert</span>
+                </div>
+                <div class="actions">
+                    <a href="{{ route('admin.products.index') }}" class="btn btn-sm red">View all products</a>
+                </div>
+            </div>
+            <div class="portlet-body">
+                <p class="text-muted">The following products are below their minimum stock level. Consider restocking.</p>
+                <div class="table-scrollable">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Current stock</th>
+                                <th>Min. limit</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($lowStockProducts as $p)
+                            <tr>
+                                <td>{{ $p->name }}</td>
+                                <td>{{ $p->category->name ?? '-' }}</td>
+                                <td><span class="label label-danger">{{ $p->stock_quantity }}</span></td>
+                                <td>{{ $p->minimum_stock_limit }}</td>
+                                <td><a href="{{ route('admin.products.edit', $p) }}" class="btn btn-xs blue">Edit stock</a></td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 @endsection
 
 @push('scripts')

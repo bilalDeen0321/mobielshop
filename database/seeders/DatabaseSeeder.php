@@ -12,6 +12,8 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->call(BrandSeeder::class);
+
         $categories = [
             ['name' => 'Mobile Phones', 'slug' => 'mobile-phones'],
             ['name' => 'Tablets', 'slug' => 'tablets'],
