@@ -27,12 +27,12 @@
                         <tr>
                             <td>{{ $item->product->name ?? $item->product_id }}</td>
                             <td>{{ $item->quantity }}</td>
-                            <td>£{{ number_format($item->refund_amount, 2) }}</td>
+                            <td>{{ $currency }}{{ number_format($item->refund_amount, 2) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
-                <p class="text-right"><strong>Total refund: £{{ number_format($returnModel->total_refund, 2) }}</strong></p>
+                <p class="text-right"><strong>Total refund: {{ $currency }}{{ number_format($returnModel->total_refund, 2) }}</strong></p>
                 <a href="{{ route('admin.returns.index') }}" class="btn default">Back to returns</a>
             </div>
         </div>

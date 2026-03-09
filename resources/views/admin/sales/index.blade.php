@@ -47,9 +47,9 @@
                             <tr>
                                 <td>{{ $sale->sale_number }}</td>
                                 <td>{{ $sale->created_at->format('d M Y H:i') }}</td>
-                                <td>{{ $sale->customer_name ?: '—' }}</td>
+                                <td>{{ $sale->customer?->name ?? $sale->customer_name ?: '—' }}</td>
                                 <td>{{ ucfirst($sale->payment_method) }}</td>
-                                <td>£{{ number_format($sale->total, 2) }}</td>
+                                <td>{{ $currency }}{{ number_format($sale->total, 2) }}</td>
                                 <td>{{ $sale->admin->name ?? '—' }}</td>
                                 <td><a href="{{ route('admin.sales.show', $sale) }}" class="btn btn-xs blue">View / Receipt</a></td>
                             </tr>

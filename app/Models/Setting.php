@@ -23,4 +23,11 @@ class Setting extends Model
         static::updateOrCreate(['key' => $key], ['value' => (string) $value]);
         Cache::forget('setting_' . $key);
     }
+
+    /** Format a numeric amount using the store currency symbol. */
+    public static function formatMoney(float $amount, int $decimals = 2): string
+    {
+        $symbol = static::get('currency', config('currencies.default', '£'));
+        return $symbol . number_format((float) $amount, $decimals);
+    }
 }

@@ -34,7 +34,7 @@
                         <tr>
                             <td>{{ $p->purchase_number }}</td>
                             <td>{{ $p->created_at->format('d M Y H:i') }}</td>
-                            <td>£{{ number_format($p->total, 2) }}</td>
+                            <td>{{ $currency }}{{ number_format($p->total, 2) }}</td>
                             <td><a href="{{ route('admin.purchases.show', $p) }}" class="btn btn-xs default">View</a></td>
                         </tr>
                         @empty

@@ -24,9 +24,9 @@
                 </form>
                 <p>Cost is estimated using product base/wholesale price per item sold.</p>
                 <table class="table table-bordered" style="max-width:400px;">
-                    <tr><th>Total revenue</th><td>£{{ number_format($totalRevenue, 2) }}</td></tr>
-                    <tr><th>Estimated cost</th><td>£{{ number_format($totalCost, 2) }}</td></tr>
-                    <tr><th>Profit</th><td class="bold">£{{ number_format($profit, 2) }}</td></tr>
+                    <tr><th>Total revenue</th><td>{{ $currency }}{{ number_format($totalRevenue, 2) }}</td></tr>
+                    <tr><th>Estimated cost</th><td>{{ $currency }}{{ number_format($totalCost, 2) }}</td></tr>
+                    <tr><th>Profit</th><td class="bold">{{ $currency }}{{ number_format($profit, 2) }}</td></tr>
                 </table>
             </div>
         </div>

@@ -40,13 +40,13 @@
             @foreach($cartItems as $item)
             <div class="flex justify-between gap-2">
                 <span class="truncate">{{ $item['quantity'] }} × {{ $item['product']->name }}{!! $item['variant']->variant_name ? ' (' . e($item['variant']->variant_name) . ')' : '' !!}</span>
-                <span class="whitespace-nowrap">£{{ number_format((float) $item['variant']->price * $item['quantity'], 2) }}</span>
+                <span class="whitespace-nowrap">{{ $currency }}{{ number_format((float) $item['variant']->price * $item['quantity'], 2) }}</span>
             </div>
             @endforeach
         </div>
         <div class="flex items-center justify-between text-sm pt-2 border-t border-gray-200">
             <span class="text-gray-500">Total</span>
-            <span class="font-semibold">£{{ number_format($total, 2) }}</span>
+            <span class="font-semibold">{{ $currency }}{{ number_format($total, 2) }}</span>
         </div>
         <button type="button" class="w-full px-4 py-2.5 rounded-md bg-primary text-white text-sm font-semibold hover:opacity-90">Pay now</button>
     </aside>

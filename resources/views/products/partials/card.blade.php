@@ -37,9 +37,9 @@
         <p class="text-xs text-gray-500 mb-1">{{ $product->brand ?? 'Brand' }}</p>
         <p class="text-sm font-semibold text-gray-900 line-clamp-2 mb-2 group-hover:text-primary">{{ $product->name }}</p>
         <div class="flex items-baseline gap-2 flex-wrap">
-            <span class="text-lg font-bold text-primary">£{{ number_format((float) $price, 2) }}</span>
+            <span class="text-lg font-bold text-primary">{{ $currency }}{{ number_format((float) $price, 2) }}</span>
             @if($originalPrice && (float)$originalPrice > (float)$price)
-                <span class="text-sm text-gray-400 line-through">£{{ number_format((float) $originalPrice, 2) }}</span>
+                <span class="text-sm text-gray-400 line-through">{{ $currency }}{{ number_format((float) $originalPrice, 2) }}</span>
             @endif
         </div>
     </a>

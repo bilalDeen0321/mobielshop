@@ -85,7 +85,7 @@
                             <label class="col-md-2 control-label">Sale discount (%)</label>
                             <div class="col-md-8">
                                 <input type="number" name="sale_discount_percent" class="form-control" min="0" max="100" step="0.01" value="{{ old('sale_discount_percent', $product->sale_discount_percent ?? 0) }}" placeholder="e.g. 10">
-                                <span class="help-block">Discounted price = @if($product->is_on_sale && $product->sale_price) £{{ number_format($product->sale_price, 2) }} @else — @endif (when on sale).</span>
+                                <span class="help-block">Discounted price = @if($product->is_on_sale && $product->sale_price) {{ $currency }}{{ number_format($product->sale_price, 2) }} @else — @endif (when on sale).</span>
                             </div>
                         </div>
                         <div class="form-group">
@@ -114,7 +114,8 @@
                         <div class="form-group">
                             <label class="col-md-2 control-label">Description</label>
                             <div class="col-md-8">
-                                <textarea name="description" class="form-control" rows="4">{{ old('description', $product->description) }}</textarea>
+                                <textarea id="product-description" name="description" class="form-control" rows="6">{{ old('description', $product->description) }}</textarea>
+                                <span class="help-block">You can format this description (headings, lists, bold text, etc.).</span>
                             </div>
                         </div>
                         <div class="form-group">
@@ -162,3 +163,15 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
+<script>
+if (typeof CKEDITOR !== 'undefined') {
+    CKEDITOR.replace('product-description', {
+        height: 220,
+        removeButtons: 'Source,Image,Flash,Table,HorizontalRule,SpecialChar,Maximize,About'
+    });
+}
+</script>
+@endpush

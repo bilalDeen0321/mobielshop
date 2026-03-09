@@ -27,13 +27,13 @@
                         <tr>
                             <td>{{ $item->product->name ?? $item->product_id }}</td>
                             <td>{{ $item->quantity }}</td>
-                            <td>£{{ number_format($item->unit_cost, 2) }}</td>
-                            <td>£{{ number_format($item->line_total, 2) }}</td>
+                            <td>{{ $currency }}{{ number_format($item->unit_cost, 2) }}</td>
+                            <td>{{ $currency }}{{ number_format($item->line_total, 2) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
-                <p class="text-right"><strong>Total: £{{ number_format($purchase->total, 2) }}</strong></p>
+                <p class="text-right"><strong>Total: {{ $currency }}{{ number_format($purchase->total, 2) }}</strong></p>
                 <a href="{{ route('admin.purchases.index') }}" class="btn default">Back to purchases</a>
             </div>
         </div>

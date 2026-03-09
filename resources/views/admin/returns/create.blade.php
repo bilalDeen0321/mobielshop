@@ -31,7 +31,7 @@
                                 <td><input type="checkbox" name="items[{{ $idx }}][include]" value="1" class="include-item"></td>
                                 <td>{{ $item->product_name }}</td>
                                 <td>{{ $item->quantity }}</td>
-                                <td>£{{ number_format($item->unit_price, 2) }}</td>
+                                <td>{{ $currency }}{{ number_format($item->unit_price, 2) }}</td>
                                 <td>
                                     <input type="hidden" name="items[{{ $idx }}][product_id]" value="{{ $item->product_id }}">
                                     <input type="number" name="items[{{ $idx }}][quantity]" class="form-control return-qty" min="0" max="{{ $item->quantity }}" value="0" style="width:80px;">

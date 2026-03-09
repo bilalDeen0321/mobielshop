@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
+use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Product;
+use App\Models\Sale;
+use App\Models\User;
 
 class DashboardController extends Controller
 {
@@ -12,12 +15,28 @@ class DashboardController extends Controller
     {
         $productCount = Product::count();
         $categoryCount = Category::count();
+        $brandCount = Brand::count();
+        $userCount = User::count();
+        $totalSalesCount = Sale::count();
+        $today = now()->toDateString();
+        $todaySalesCount = Sale::whereDate('created_at', $today)->count();
+        $todaySalesTotal = Sale::whereDate('created_at', $today)->sum('total');
+
         $lowStockProducts = Product::whereColumn('stock_quantity', '<', 'minimum_stock_limit')
             ->where('minimum_stock_limit', '>', 0)
             ->orderBy('stock_quantity')
             ->limit(15)
             ->get();
 
-        return view('admin.dashboard', compact('productCount', 'categoryCount', 'lowStockProducts'));
+        return view('admin.dashboard', compact(
+            'productCount',
+            'categoryCount',
+            'brandCount',
+            'userCount',
+            'totalSalesCount',
+            'todaySalesCount',
+            'todaySalesTotal',
+            'lowStockProducts'
+        ));
     }
 }

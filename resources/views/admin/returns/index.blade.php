@@ -28,7 +28,7 @@
                             <td>{{ $r->return_number }}</td>
                             <td>{{ $r->created_at->format('d M Y H:i') }}</td>
                             <td><a href="{{ route('admin.sales.show', $r->sale) }}">{{ $r->sale->sale_number }}</a></td>
-                            <td>£{{ number_format($r->total_refund, 2) }}</td>
+                            <td>{{ $currency }}{{ number_format($r->total_refund, 2) }}</td>
                             <td>{{ $r->admin->name ?? '-' }}</td>
                             <td><a href="{{ route('admin.returns.show', $r) }}" class="btn btn-xs blue">View</a></td>
                         </tr>

@@ -44,21 +44,21 @@
                         <tr>
                             <td>{{ $item->product_name }}</td>
                             <td>{{ $item->quantity }}</td>
-                            <td>£{{ number_format($item->unit_price, 2) }}</td>
-                            <td>£{{ number_format($item->line_total, 2) }}</td>
+                            <td>{{ $currency }}{{ number_format($item->unit_price, 2) }}</td>
+                            <td>{{ $currency }}{{ number_format($item->line_total, 2) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
                 <div class="text-right">
-                    <p>Subtotal: £{{ number_format($sale->subtotal, 2) }}</p>
+                    <p>Subtotal: {{ $currency }}{{ number_format($sale->subtotal, 2) }}</p>
                     @if($sale->tax_amount > 0)
-                    <p>Tax ({{ number_format($sale->tax_rate, 1) }}%): £{{ number_format($sale->tax_amount, 2) }}</p>
+                    <p>Tax ({{ number_format($sale->tax_rate, 1) }}%): {{ $currency }}{{ number_format($sale->tax_amount, 2) }}</p>
                     @endif
                     @if($sale->discount_amount > 0)
-                    <p>Discount: -£{{ number_format($sale->discount_amount, 2) }}</p>
+                    <p>Discount: -{{ $currency }}{{ number_format($sale->discount_amount, 2) }}</p>
                     @endif
-                    <p class="bold font-lg">Total: £{{ number_format($sale->total, 2) }}</p>
+                    <p class="bold font-lg">Total: {{ $currency }}{{ number_format($sale->total, 2) }}</p>
                     <p class="text-muted">Payment: {{ ucfirst($sale->payment_method) }}</p>
                 </div>
                 @if($sale->notes)

@@ -28,10 +28,65 @@
             </div>
             <div class="portlet-body">
                 <div class="form-group">
-                    <input type="text" id="pos-search" class="form-control input-lg" placeholder="Type product name, brand..." autocomplete="off">
+                    <input type="text" id="pos-search" class="form-control input-lg" placeholder="Type name, brand, ID or category..." autocomplete="off">
                 </div>
-                <div id="pos-search-results" class="list-group" style="max-height: 320px; overflow-y: auto;"></div>
-                <p id="pos-search-hint" class="text-muted small">Start typing to search. Click a product to add to cart.</p>
+                <div class="row" style="margin-bottom: 10px;">
+                    <div class="col-sm-7">
+                        <select id="pos-category-filter" class="form-control input-sm">
+                            <option value="">All categories</option>
+                            @foreach($categories ?? [] as $cat)
+                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-sm-5">
+                        <label class="mt-checkbox mt-checkbox-outline small" style="margin-top: 6px;">
+                            <input type="checkbox" id="pos-instock-only" value="1" checked> In stock only
+                            <span></span>
+                        </label>
+                    </div>
+                </div>
+                <div id="pos-search-results" class="list-group" style="max-height: 220px; overflow-y: auto;"></div>
+                <p id="pos-search-hint" class="text-muted small">Search by name, brand, ID or category. Click a product card to add it to the cart.</p>
+
+                <hr>
+                <h5 class="font-dark" style="margin-top: 5px; margin-bottom: 8px;">Browse products</h5>
+                <div id="pos-product-grid" style="max-height: 260px; overflow-y: auto;">
+                    <div class="row">
+                        @forelse($products ?? [] as $product)
+                            @php
+                                $image = $product->images->first()?->url ?? 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=200&h=200&fit=crop';
+                            @endphp
+                            <div class="col-xs-6 col-sm-4" style="margin-bottom: 10px;">
+                                <a href="javascript:;" class="pos-add-product pos-product-grid-item" data-id="{{ $product->id }}" data-name="{{ $product->name }}" data-brand="{{ $product->brand }}" data-price="{{ (float) $product->retail_price }}" data-stock="{{ (int) $product->stock_quantity }}">
+                                    <div class="thumbnail" style="margin-bottom: 5px;">
+                                        <div style="height: 90px; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#f9f9f9;">
+                                            <img src="{{ $image }}" alt="{{ $product->name }}" style="max-height: 90px; max-width: 100%; object-fit: contain;">
+                                        </div>
+                                        <div class="caption" style="padding: 6px 8px;">
+                                            <div style="font-size: 11px; color:#999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                {{ $product->brand ?? '—' }}
+                                            </div>
+                                            <div style="font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $product->name }}">
+                                                {{ $product->name }}
+                                            </div>
+                                            <div style="font-size: 11px; color:#555;">
+                                                <span>{{ $currency }}{{ number_format((float) $product->retail_price, 2) }}</span>
+                                                <span class="pull-right {{ $product->stock_quantity > 0 ? 'text-success' : 'text-danger' }}">
+                                                    {{ $product->stock_quantity > 0 ? 'Stock: '.$product->stock_quantity : 'Out of stock' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        @empty
+                            <div class="col-xs-12">
+                                <p class="text-muted small">No products available yet.</p>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -72,16 +127,16 @@
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label>Discount (£)</label>
+                            <label>Discount ({{ $currency }})</label>
                             <input type="number" id="pos-discount" class="form-control" min="0" step="0.01" value="0">
                         </div>
                     </div>
                 </div>
                 <div class="well well-sm">
-                    <strong>Subtotal:</strong> £<span id="pos-subtotal">0.00</span><br>
-                    <strong>Tax:</strong> £<span id="pos-tax">0.00</span><br>
-                    <strong>Discount:</strong> -£<span id="pos-discount-display">0.00</span><br>
-                    <strong class="font-lg">Total:</strong> £<span id="pos-total">0.00</span>
+                    <strong>Subtotal:</strong> {{ $currency }}<span id="pos-subtotal">0.00</span><br>
+                    <strong>Tax:</strong> {{ $currency }}<span id="pos-tax">0.00</span><br>
+                    <strong>Discount:</strong> -{{ $currency }}<span id="pos-discount-display">0.00</span><br>
+                    <strong class="font-lg">Total:</strong> {{ $currency }}<span id="pos-total">0.00</span>
                 </div>
                 <div class="form-group">
                     <label>Payment method</label>
@@ -132,7 +187,7 @@
             </div>
             <div class="modal-body" id="pos-receipt-body">
                 <p><strong>Sale #:</strong> <span id="pos-receipt-number"></span></p>
-                <p><strong>Total:</strong> £<span id="pos-receipt-total"></span></p>
+                <p><strong>Total:</strong> {{ $currency }}<span id="pos-receipt-total"></span></p>
                 <hr>
                 <p class="small text-muted">Stock has been updated. You can print this as a receipt.</p>
             </div>
@@ -152,6 +207,7 @@
     var searchUrl = '{{ route("admin.pos.search") }}';
     var completeUrl = '{{ route("admin.pos.complete") }}';
     var token = '{{ csrf_token() }}';
+    var currencySymbol = window.adminCurrencySymbol || '£';
 
     function formatMoney(n) { return Number(n).toFixed(2); }
 
@@ -175,8 +231,8 @@
             tr.append('<td>' + item.name + '</td>');
             var qtyInput = $('<input type="number" class="form-control input-sm pos-cart-qty" min="1" max="' + item.stock_quantity + '" value="' + item.quantity + '">');
             tr.append($('<td></td>').append(qtyInput));
-            tr.append('<td>£' + formatMoney(item.unit_price) + '</td>');
-            tr.append('<td class="pos-line-total">£' + formatMoney(lineTotal) + '</td>');
+            tr.append('<td>' + currencySymbol + formatMoney(item.unit_price) + '</td>');
+            tr.append('<td class="pos-line-total">' + currencySymbol + formatMoney(lineTotal) + '</td>');
             tr.append('<td><button type="button" class="btn btn-xs red pos-remove-item"><i class="fa fa-times"></i></button></td>');
             tbody.append(tr);
         });
@@ -223,37 +279,70 @@
         clearTimeout(searchTimer);
         var container = $('#pos-search-results');
         var hint = $('#pos-search-hint');
-        if (q.length < 2) {
+        if (q.length < 2 && !$('#pos-category-filter').val() && !$('#pos-instock-only').is(':checked')) {
             container.empty();
             hint.show();
             return;
         }
         searchTimer = setTimeout(function() {
             hint.hide();
-            container.html('<li class="list-group-item text-muted">Searching...</li>');
-            $.get(searchUrl, { q: q })
+            container.html('<div class="list-group-item text-muted">Searching...</div>');
+            $.get(searchUrl, {
+                q: q,
+                category_id: $('#pos-category-filter').val(),
+                in_stock: $('#pos-instock-only').is(':checked') ? 1 : 0
+            })
                 .done(function(data) {
                     container.empty();
                     if (!data || data.length === 0) {
-                        container.append('<li class="list-group-item text-muted">No products found</li>');
+                        container.append('<div class="list-group-item text-muted">No products found</div>');
                         return;
                     }
                     data.forEach(function(p) {
                         var inCart = cart.find(function(item) { return item.product_id === p.id; });
                         var available = p.stock_quantity - (inCart ? inCart.quantity : 0);
                         if (available <= 0) return;
-                        var li = $('<a href="javascript:;" class="list-group-item pos-add-product"></a>');
-                        li.data('product', p);
-                        li.html('<strong>' + p.name + '</strong> ' + (p.brand ? ' (' + p.brand + ')' : '') + ' &mdash; £' + formatMoney(p.retail_price) + ' &nbsp; <span class="badge">Stock: ' + p.stock_quantity + '</span>');
-                        container.append(li);
+                        var card = $('<a href="javascript:;" class="list-group-item pos-add-product"></a>');
+                        card.data('product', p);
+                        var imgHtml = p.image_url
+                            ? '<div class="media-left" style="width:60px;"><img src="' + p.image_url + '" style="max-width:60px; max-height:60px; object-fit:contain;"/></div>'
+                            : '<div class="media-left" style="width:60px;"><div style="width:60px;height:60px;background:#f5f5f5;border-radius:3px;"></div></div>';
+                        var bodyHtml =
+                            '<div class="media-body">' +
+                                '<div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + p.name + '</div>' +
+                                '<div style="font-size:11px;color:#777;">' +
+                                    (p.brand ? p.brand + ' &middot; ' : '') +
+                                    (p.category ? p.category : '') +
+                                    (p.sku ? ' &middot; #' + p.sku : '') +
+                                '</div>' +
+                                '<div style="font-size:11px;margin-top:2px;">' +
+                                    '<span>' + currencySymbol + formatMoney(p.retail_price) + '</span>' +
+                                    '<span class="pull-right ' + (p.stock_quantity > 0 ? 'text-success' : 'text-danger') + '">Stock: ' + p.stock_quantity + '</span>' +
+                                '</div>' +
+                            '</div>';
+                        card.html('<div class="media">' + imgHtml + bodyHtml + '</div>');
+                        container.append(card);
                     });
                 })
-                .fail(function() { container.html('<li class="list-group-item text-danger">Search failed</li>'); });
+                .fail(function() { container.html('<div class="list-group-item text-danger">Search failed</div>'); });
         }, 300);
+    });
+
+    $('#pos-category-filter, #pos-instock-only').on('change', function() {
+        $('#pos-search').trigger('input');
     });
 
     $(document).on('click', '.pos-add-product', function() {
         var p = $(this).data('product');
+        if (!p) {
+            p = {
+                id: parseInt($(this).data('id'), 10),
+                name: $(this).data('name'),
+                brand: $(this).data('brand'),
+                retail_price: parseFloat($(this).data('price')),
+                stock_quantity: parseInt($(this).data('stock'), 10),
+            };
+        }
         addToCart(p, 1);
     });
 
@@ -266,7 +355,7 @@
         if (val > item.stock_quantity) val = item.stock_quantity;
         item.quantity = val;
         $(this).val(val);
-        tr.find('.pos-line-total').text('£' + formatMoney(item.unit_price * val));
+        tr.find('.pos-line-total').text(currencySymbol + formatMoney(item.unit_price * val));
         updateTotals();
     });
 

@@ -17,7 +17,7 @@
                         Latest Smartphones <br><span class="text-primary">Best Prices</span>
                     </h2>
                     <p class="text-sm sm:text-base text-white/90 mb-6 max-w-sm">
-                        Discover amazing deals on the latest phones, tablets and accessories. Free shipping on orders over £250.
+                        Discover amazing deals on the latest phones, tablets and accessories. Free shipping on orders over {{ $currency }}250.
                     </p>
                     <a href="{{ route('shop') }}" class="inline-flex items-center gap-2 bg-primary text-white px-7 py-3 rounded-lg font-semibold text-sm hover:opacity-90">
                         Shop Now
@@ -89,7 +89,7 @@
                 </div>
                 <div>
                     <p class="text-sm font-semibold text-gray-900">Free Delivery</p>
-                    <p class="text-xs text-gray-500">On orders over £250</p>
+                    <p class="text-xs text-gray-500">On orders over {{ $currency }}250</p>
                 </div>
             </div>
             <div class="flex items-center gap-3">

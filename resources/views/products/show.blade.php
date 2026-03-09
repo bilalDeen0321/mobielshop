@@ -60,15 +60,21 @@
             @endif
             <h1 class="text-2xl md:text-3xl font-display font-bold text-gray-900 mb-2">{{ $product->name }}</h1>
 
+            @if($product->description)
+                <div class="prose prose-sm max-w-none text-gray-700 mb-4">
+                    {!! \Illuminate\Support\Str::markdown($product->description) !!}
+                </div>
+            @endif
+
             <div class="flex items-baseline gap-3 mb-6 flex-wrap">
                 @if($product->is_on_sale && $product->sale_price !== null)
-                    <span id="product-price" class="text-2xl font-bold text-primary">£{{ number_format((float) $product->sale_price, 2) }}</span>
-                    <span class="text-sm text-gray-400 line-through">£{{ number_format((float) $product->retail_price, 2) }}</span>
+                    <span id="product-price" class="text-2xl font-bold text-primary">{{ $currency }}{{ number_format((float) $product->sale_price, 2) }}</span>
+                    <span class="text-sm text-gray-400 line-through">{{ $currency }}{{ number_format((float) $product->retail_price, 2) }}</span>
                     <span class="text-sm font-medium text-accent">-{{ number_format((float) $product->sale_discount_percent, 0) }}%</span>
                 @else
-                    <span id="product-price" class="text-2xl font-bold text-primary">£{{ number_format((float) ($selectedVariant->price ?? $product->base_price), 2) }}</span>
+                    <span id="product-price" class="text-2xl font-bold text-primary">{{ $currency }}{{ number_format((float) ($selectedVariant->price ?? $product->base_price), 2) }}</span>
                     @if($variants->max('price') > $variants->min('price'))
-                        <span class="text-sm text-gray-400 line-through">£{{ number_format((float) $variants->max('price'), 2) }}</span>
+                        <span class="text-sm text-gray-400 line-through">{{ $currency }}{{ number_format((float) $variants->max('price'), 2) }}</span>
                     @endif
                 @endif
             </div>
@@ -140,53 +146,138 @@
                 </div>
             </form>
 
-            <ul class="mt-6 space-y-1 text-sm text-gray-600">
-                <li class="flex items-center gap-2"><span class="text-primary">✓</span> Same Day Dispatch</li>
-                <li class="flex items-center gap-2"><span class="text-primary">✓</span> 12 Months Warranty</li>
-                <li class="flex items-center gap-2"><span class="text-primary">✓</span> Quality Guaranteed</li>
-            </ul>
+            @php
+                $highlightText = $product->shipping_info ?: $product->warranty_info ?: $product->returns_info ?: null;
+            @endphp
+            @if($highlightText)
+                <div class="mt-4 text-xs text-gray-600">
+                    {!! \Illuminate\Support\Str::markdown($highlightText) !!}
+                </div>
+            @endif
         </div>
     </div>
 
-    {{-- Tabs --}}
-    <div class="mt-12 border-t border-gray-200 pt-8">
-        <div class="flex flex-wrap gap-1 border-b border-gray-200 mb-6 overflow-x-auto">
-            <button type="button" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 -mb-px border-primary text-primary" data-tab="description">Description</button>
-            <button type="button" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-900 -mb-px" data-tab="variant-info">Variant information</button>
-            <button type="button" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-900 -mb-px" data-tab="payment">Payment</button>
-            <button type="button" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-900 -mb-px" data-tab="shipping">Shipping & Delivery</button>
-            <button type="button" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-900 -mb-px" data-tab="returns">Returns</button>
-            <button type="button" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-900 -mb-px" data-tab="warranty">Warranty</button>
-            <button type="button" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-900 -mb-px" data-tab="other">Other Policies</button>
+    @php 
+        $hasVariantInfo = $variants->isNotEmpty();
+        $hasPayment = !empty(trim($product->payment_info ?? ''));
+        $hasShipping = !empty(trim($product->shipping_info ?? ''));
+        $hasReturns = !empty(trim($product->returns_info ?? ''));
+        $hasWarranty = !empty(trim($product->warranty_info ?? ''));
+        $hasOther = !empty(trim($product->other_policies ?? ''));
+
+        $tabs = []; 
+        if ($hasVariantInfo) $tabs[] = 'variant-info';
+        if ($hasPayment) $tabs[] = 'payment';
+        if ($hasShipping) $tabs[] = 'shipping';
+        if ($hasReturns) $tabs[] = 'returns';
+        if ($hasWarranty) $tabs[] = 'warranty';
+        if ($hasOther) $tabs[] = 'other';
+        $activeTab = $tabs[0] ?? null;
+    @endphp
+
+    {{-- Description & policies tabs under gallery --}}
+    @if($activeTab)
+    <div class="mt-10 border-t border-gray-200 pt-6">
+        <div class="flex flex-wrap gap-2 mb-4">
+         
+            @if($hasVariantInfo)
+                <button
+                    type="button"
+                    class="tab-btn inline-flex items-center px-3 py-1.5 text-xs md:text-sm rounded-full transition-colors {{ $activeTab === 'variant-info' ? 'bg-primary text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
+                    data-tab="variant-info">
+                    Variant information
+                </button>
+            @endif
+            @if($hasPayment)
+                <button
+                    type="button"
+                    class="tab-btn inline-flex items-center px-3 py-1.5 text-xs md:text-sm rounded-full transition-colors {{ $activeTab === 'payment' ? 'bg-primary text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
+                    data-tab="payment">
+                    Payment
+                </button>
+            @endif
+            @if($hasShipping)
+                <button
+                    type="button"
+                    class="tab-btn inline-flex items-center px-3 py-1.5 text-xs md:text-sm rounded-full transition-colors {{ $activeTab === 'shipping' ? 'bg-primary text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
+                    data-tab="shipping">
+                    Shipping &amp; Delivery
+                </button>
+            @endif
+            @if($hasReturns)
+                <button
+                    type="button"
+                    class="tab-btn inline-flex items-center px-3 py-1.5 text-xs md:text-sm rounded-full transition-colors {{ $activeTab === 'returns' ? 'bg-primary text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
+                    data-tab="returns">
+                    Returns
+                </button>
+            @endif
+            @if($hasWarranty)
+                <button
+                    type="button"
+                    class="tab-btn inline-flex items-center px-3 py-1.5 text-xs md:text-sm rounded-full transition-colors {{ $activeTab === 'warranty' ? 'bg-primary text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
+                    data-tab="warranty">
+                    Warranty
+                </button>
+            @endif
+            @if($hasOther)
+                <button
+                    type="button"
+                    class="tab-btn inline-flex items-center px-3 py-1.5 text-xs md:text-sm rounded-full transition-colors {{ $activeTab === 'other' ? 'bg-primary text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
+                    data-tab="other">
+                    Other Policies
+                </button>
+            @endif
         </div>
         <div class="prose prose-sm max-w-none">
-            <div id="tab-description" class="tab-pane">
-                {!! \Illuminate\Support\Str::markdown($product->description ?? 'No description.') !!}
-            </div>
-            <div id="tab-variant-info" class="tab-pane hidden">
-                <p class="text-gray-600">Color, storage and condition options are shown above. Each variant has its own price and stock.</p>
-                @if($variants->isNotEmpty())
-                    <table class="min-w-full text-sm mt-2">
-                        <thead><tr class="border-b"><th class="text-left py-2">Variant</th><th class="text-left py-2">Price</th><th class="text-left py-2">Stock</th></tr></thead>
-                        <tbody>
-                            @foreach($variants as $v)
-                                <tr class="border-b border-gray-100">
-                                    <td class="py-2">{{ $v->variant_name ?? $v->color . ' / ' . $v->storage . ' / ' . $v->condition }}</td>
-                                    <td class="py-2">£{{ number_format((float) $v->price, 2) }}</td>
-                                    <td class="py-2">{{ $v->inventory?->quantity ?? 0 }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @endif
-            </div>
-            <div id="tab-payment" class="tab-pane hidden">{!! \Illuminate\Support\Str::markdown($product->payment_info ?? '—') !!}</div>
-            <div id="tab-shipping" class="tab-pane hidden">{!! \Illuminate\Support\Str::markdown($product->shipping_info ?? '—') !!}</div>
-            <div id="tab-returns" class="tab-pane hidden">{!! \Illuminate\Support\Str::markdown($product->returns_info ?? '—') !!}</div>
-            <div id="tab-warranty" class="tab-pane hidden">{!! \Illuminate\Support\Str::markdown($product->warranty_info ?? '—') !!}</div>
-            <div id="tab-other" class="tab-pane hidden">{!! \Illuminate\Support\Str::markdown($product->other_policies ?? '—') !!}</div>
+             
+            @if($hasVariantInfo)
+                <div id="tab-variant-info" class="tab-pane {{ $activeTab === 'variant-info' ? '' : 'hidden' }}">
+                    <p class="text-gray-600">Color, storage and condition options are shown above. Each variant has its own price and stock.</p>
+                    @if($variants->isNotEmpty())
+                        <table class="min-w-full text-sm mt-2">
+                            <thead><tr class="border-b"><th class="text-left py-2">Variant</th><th class="text-left py-2">Price</th><th class="text-left py-2">Stock</th></tr></thead>
+                            <tbody>
+                                @foreach($variants as $v)
+                                    <tr class="border-b border-gray-100">
+                                        <td class="py-2">{{ $v->variant_name ?? $v->color . ' / ' . $v->storage . ' / ' . $v->condition }}</td>
+                                        <td class="py-2">{{ $currency }}{{ number_format((float) $v->price, 2) }}</td>
+                                        <td class="py-2">{{ $v->inventory?->quantity ?? 0 }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @endif
+                </div>
+            @endif
+            @if($hasPayment)
+                <div id="tab-payment" class="tab-pane {{ $activeTab === 'payment' ? '' : 'hidden' }}">
+                    {!! \Illuminate\Support\Str::markdown($product->payment_info) !!}
+                </div>
+            @endif
+            @if($hasShipping)
+                <div id="tab-shipping" class="tab-pane {{ $activeTab === 'shipping' ? '' : 'hidden' }}">
+                    {!! \Illuminate\Support\Str::markdown($product->shipping_info) !!}
+                </div>
+            @endif
+            @if($hasReturns)
+                <div id="tab-returns" class="tab-pane {{ $activeTab === 'returns' ? '' : 'hidden' }}">
+                    {!! \Illuminate\Support\Str::markdown($product->returns_info) !!}
+                </div>
+            @endif
+            @if($hasWarranty)
+                <div id="tab-warranty" class="tab-pane {{ $activeTab === 'warranty' ? '' : 'hidden' }}">
+                    {!! \Illuminate\Support\Str::markdown($product->warranty_info) !!}
+                </div>
+            @endif
+            @if($hasOther)
+                <div id="tab-other" class="tab-pane {{ $activeTab === 'other' ? '' : 'hidden' }}">
+                    {!! \Illuminate\Support\Str::markdown($product->other_policies) !!}
+                </div>
+            @endif
         </div>
     </div>
+    @endif
 
     @if($youMayAlsoLike->isNotEmpty())
         <section class="mt-14">
@@ -261,7 +352,7 @@
         if (!v) return;
         document.getElementById('variant_id').value = v.id;
         var displayPrice = productOnSale && productSalePrice !== null ? productSalePrice : v.price;
-        document.getElementById('product-price').textContent = '£' + displayPrice.toFixed(2);
+        document.getElementById('product-price').textContent = (window.currencySymbol || '£') + displayPrice.toFixed(2);
         var stockEl = document.getElementById('variant-stock');
         var btn = document.getElementById('add-to-cart-btn');
         if (v.stock > 0) {
@@ -281,11 +372,11 @@
         btn.addEventListener('click', function () {
             var tab = this.getAttribute('data-tab');
             document.querySelectorAll('.tab-btn').forEach(function (b) {
-                b.classList.remove('border-primary', 'text-primary');
-                b.classList.add('border-transparent', 'text-gray-500');
+                b.classList.remove('bg-primary', 'text-white', 'shadow-sm');
+                b.classList.add('bg-gray-100', 'text-gray-700');
             });
-            this.classList.add('border-primary', 'text-primary');
-            this.classList.remove('border-transparent', 'text-gray-500');
+            this.classList.add('bg-primary', 'text-white', 'shadow-sm');
+            this.classList.remove('bg-gray-100', 'text-gray-700');
             document.querySelectorAll('.tab-pane').forEach(function (p) { p.classList.add('hidden'); });
             var pane = document.getElementById('tab-' + tab);
             if (pane) pane.classList.remove('hidden');

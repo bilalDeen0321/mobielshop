@@ -30,7 +30,7 @@
                             <td>{{ $i + 1 }}</td>
                             <td>{{ $t->product_name }}</td>
                             <td>{{ $t->total_qty }}</td>
-                            <td>£{{ number_format($t->total_revenue, 2) }}</td>
+                            <td>{{ $currency }}{{ number_format($t->total_revenue, 2) }}</td>
                         </tr>
                         @empty
                         <tr><td colspan="4">No data for this period.</td></tr>

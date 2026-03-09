@@ -17,7 +17,7 @@
                     <div class="flex-1">
                         <p class="text-sm font-semibold text-gray-900">{{ $item['product']->name }}</p>
                         <p class="text-xs text-gray-500">{{ $item['product']->brand }}{!! $item['variant']->variant_name ? ' · ' . e($item['variant']->variant_name) : '' !!}</p>
-                        <p class="text-sm font-medium text-primary mt-1">£{{ number_format((float) $item['variant']->price, 2) }}</p>
+                        <p class="text-sm font-medium text-primary mt-1">{{ $currency }}{{ number_format((float) $item['variant']->price, 2) }}</p>
                     </div>
                     <div class="flex items-center gap-2">
                         <form action="{{ route('cart.update', $item['variant']->id) }}" method="POST" class="inline">
@@ -44,7 +44,7 @@
                 <h2 class="text-base font-semibold text-gray-900">Summary</h2>
                 <div class="flex items-center justify-between text-sm">
                     <span class="text-gray-500">Subtotal</span>
-                    <span class="font-semibold">£{{ number_format($subtotal, 2) }}</span>
+                    <span class="font-semibold">{{ $currency }}{{ number_format($subtotal, 2) }}</span>
                 </div>
                 <p class="text-xs text-gray-500">Shipping and discounts are calculated at checkout.</p>
                 <a href="{{ route('checkout') }}" class="block w-full text-center px-4 py-2.5 rounded-md bg-primary text-white text-sm font-semibold hover:opacity-90">Checkout</a>

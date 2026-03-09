@@ -233,6 +233,7 @@
     <script src="{{ asset('admin/theme/assets/global/scripts/app.min.js') }}" type="text/javascript"></script>
     <script src="{{ asset('admin/theme/assets/layouts/layout2/scripts/layout.min.js') }}" type="text/javascript"></script>
     <script src="{{ asset('admin/theme/assets/layouts/layout2/scripts/demo.min.js') }}" type="text/javascript"></script>
+    <script>window.adminCurrencySymbol = @json($currency ?? '£');</script>
     @stack('scripts')
 </body>
 </html>

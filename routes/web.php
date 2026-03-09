@@ -18,6 +18,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\AccountController;
 use Illuminate\Support\Facades\Route;
 
 // Pages
@@ -43,6 +44,18 @@ Route::post('/cart/update/{id}', [CartController::class, 'update'])->name('cart.
 Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 Route::get('/wishlist', [PageController::class, 'wishlist'])->name('wishlist');
 Route::get('/checkout', [PageController::class, 'checkout'])->name('checkout');
+
+// User account (requires login)
+Route::middleware('auth')->group(function () {
+    Route::get('/account', [AccountController::class, 'dashboard'])->name('account.dashboard');
+    Route::get('/account/orders', [AccountController::class, 'orders'])->name('account.orders');
+    Route::get('/account/orders/{order}', [AccountController::class, 'showOrder'])->name('account.orders.show');
+    Route::get('/account/addresses', [AccountController::class, 'addresses'])->name('account.addresses');
+    Route::post('/account/addresses', [AccountController::class, 'saveAddresses'])->name('account.addresses.save');
+    Route::get('/account/details', [AccountController::class, 'account'])->name('account.account');
+    Route::post('/account/details', [AccountController::class, 'updateAccount'])->name('account.account.update');
+    Route::post('/account/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
+});
 
 // Auth
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login')->middleware('guest');

@@ -57,9 +57,9 @@
                                 <td> {{ $product->name }} </td>
                                 <td> {{ $product->category->name ?? '-' }} </td>
                                 <td> {{ $product->brand ?? '-' }} </td>
-                                <td> {{ number_format($product->wholesale_price, 2) }} </td>
-                                <td> {{ number_format($product->retail_price, 2) }} </td>
-                                <td> {{ number_format($profit, 2) }} <span class="text-muted">({{ $product->retail_price > 0 ? number_format(($profit / (float) $product->retail_price) * 100, 0) : 0 }}%)</span> </td>
+                                <td> {{ $currency }}{{ number_format($product->wholesale_price, 2) }} </td>
+                                <td> {{ $currency }}{{ number_format($product->retail_price, 2) }} </td>
+                                <td> {{ $currency }}{{ number_format($profit, 2) }} <span class="text-muted">({{ $product->retail_price > 0 ? number_format(($profit / (float) $product->retail_price) * 100, 0) : 0 }}%)</span> </td>
                                 <td>
                                     @if($product->isLowStock())
                                         <span class="label label-sm label-danger" title="Below minimum ({{ $product->minimum_stock_limit }})">{{ $product->stock_quantity }}</span>
@@ -242,8 +242,8 @@
                     <div class="form-section" style="margin-bottom: 20px;">
                         <h5 style="margin: 0 0 14px 0; padding-bottom: 8px; border-bottom: 2px solid #e0e0e0; color: #555; font-weight: 600;">Description & policies</h5>
                         <div class="form-group">
-                            <label for="product-description">Description</label>
-                            <textarea id="product-description" name="description" class="form-control" rows="3" placeholder="Product description"></textarea>
+                            <label for="product-description-modal">Description</label>
+                            <textarea id="product-description-modal" name="description" class="form-control" rows="4" placeholder="Product description"></textarea>
                         </div>
                         <div class="row">
                             <div class="col-md-6">
@@ -309,6 +309,7 @@
 @endpush
 
 @push('scripts')
+<script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
 <script src="{{ asset('admin/theme/assets/global/plugins/dropzone/dropzone.min.js') }}"></script>
 <script>
 if (typeof Dropzone !== 'undefined') { Dropzone.autoDiscover = false; }
@@ -326,6 +327,23 @@ if (typeof Dropzone !== 'undefined') { Dropzone.autoDiscover = false; }
     var validator;
     var productDropzone;
     var productDeleteImageIds = [];
+    var MODAL_DESC_ID = 'product-description-modal';
+
+    function initModalEditor() {
+        if (typeof CKEDITOR === 'undefined') return;
+        if (CKEDITOR.instances[MODAL_DESC_ID]) return;
+        CKEDITOR.replace(MODAL_DESC_ID, {
+            height: 180,
+            removeButtons: 'Source,Image,Flash,Table,HorizontalRule,SpecialChar,Maximize,About'
+        });
+    }
+
+    function destroyModalEditor() {
+        if (typeof CKEDITOR === 'undefined') return;
+        if (CKEDITOR.instances[MODAL_DESC_ID]) {
+            CKEDITOR.instances[MODAL_DESC_ID].destroy(true);
+        }
+    }
 
     function initDropzone() {
         if (productDropzone) return;
@@ -365,7 +383,7 @@ if (typeof Dropzone !== 'undefined') { Dropzone.autoDiscover = false; }
         var el = $('#product-discounted-price');
         if (!onSale || discount <= 0) { el.text('—'); return; }
         var discounted = Math.round(retail * (1 - discount / 100) * 100) / 100;
-        el.text('£' + discounted.toFixed(2));
+        el.text((window.adminCurrencySymbol || '£') + discounted.toFixed(2));
     }
     form.find('#product-retail, #product-sale-discount').on('input change', updateDiscountedPrice);
     form.find('#product-on-sale').on('change', updateDiscountedPrice);
@@ -414,6 +432,13 @@ if (typeof Dropzone !== 'undefined') { Dropzone.autoDiscover = false; }
         $('#product-existing-images-wrap').show();
     }
 
+    modal.on('shown.bs.modal', function() {
+        initModalEditor();
+    });
+    modal.on('hidden.bs.modal', function() {
+        destroyModalEditor();
+    });
+
     $(document).on('click', '#btn-add-product, #btn-add-product-empty', function(e) {
         e.preventDefault();
         resetForm();
@@ -452,7 +477,7 @@ if (typeof Dropzone !== 'undefined') { Dropzone.autoDiscover = false; }
                 form.find('#product-brand').val(p.brand_id || '');
                 form.find('#product-condition').val(p.condition || 'New');
                 form.find('#product-active').prop('checked', !!p.is_active);
-                form.find('#product-description').val(p.description || '');
+                form.find('#product-description-modal').val(p.description || '');
                 form.find('#product-payment').val(p.payment_info || defaultPolicyText.payment);
                 form.find('#product-shipping').val(p.shipping_info || defaultPolicyText.shipping);
                 form.find('#product-returns').val(p.returns_info || defaultPolicyText.returns);
@@ -508,6 +533,9 @@ if (typeof Dropzone !== 'undefined') { Dropzone.autoDiscover = false; }
     form.on('submit', function(e) {
         e.preventDefault();
         if (!form.valid()) return;
+        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances[MODAL_DESC_ID]) {
+            CKEDITOR.instances[MODAL_DESC_ID].updateElement();
+        }
 
         var submitBtn = $('#product-form-submit');
         var formData = new FormData(form[0]);

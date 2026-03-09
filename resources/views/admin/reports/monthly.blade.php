@@ -20,7 +20,7 @@
                     <input type="month" name="month" class="form-control" value="{{ $month }}">
                     <button type="submit" class="btn blue">Show</button>
                 </form>
-                <p><strong>Total sales: {{ $count }}</strong> | <strong>Total amount: £{{ number_format($total, 2) }}</strong></p>
+                <p><strong>Total sales: {{ $count }}</strong> | <strong>Total amount: {{ $currency }}{{ number_format($total, 2) }}</strong></p>
                 <table class="table table-bordered">
                     <thead><tr><th>Sale #</th><th>Date</th><th>Customer</th><th>Total</th><th></th></tr></thead>
                     <tbody>
@@ -29,7 +29,7 @@
                             <td>{{ $s->sale_number }}</td>
                             <td>{{ $s->created_at->format('d M Y H:i') }}</td>
                             <td>{{ $s->customer_name ?: '-' }}</td>
-                            <td>£{{ number_format($s->total, 2) }}</td>
+                            <td>{{ $currency }}{{ number_format($s->total, 2) }}</td>
                             <td><a href="{{ route('admin.sales.show', $s) }}" class="btn btn-xs default">View</a></td>
                         </tr>
                         @empty

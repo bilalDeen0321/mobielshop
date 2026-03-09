@@ -39,7 +39,7 @@
                             <td>{{ $m->created_at->format('d M Y H:i') }}</td>
                             <td>{{ $m->type }}</td>
                             <td>{{ $m->quantity > 0 ? '+' : '' }}{{ $m->quantity }}</td>
-                            <td>@if($m->unit_cost)£{{ number_format($m->unit_cost, 2) }}@else-@endif</td>
+                            <td>@if($m->unit_cost){{ $currency }}{{ number_format($m->unit_cost, 2) }}@else-@endif</td>
                             <td>{{ $m->reference_type }} #{{ $m->reference_id }}</td>
                             <td>{{ $m->admin->name ?? '-' }}</td>
                             <td>{{ $m->notes }}</td>

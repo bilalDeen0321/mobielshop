@@ -118,8 +118,13 @@
                     </div>
                     <div class="form-group">
                         <label class="col-md-2 control-label">Currency</label>
-                        <div class="col-md-2">
-                            <input type="text" name="currency" class="form-control" value="{{ $currency }}" placeholder="e.g. £ or $">
+                        <div class="col-md-4">
+                            <select name="currency" class="form-control">
+                                @foreach($currencies as $symbol => $label)
+                                    <option value="{{ $symbol }}" {{ ($currency ?: config('currencies.default')) == $symbol ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <span class="help-block">Used for prices across the store and admin.</span>
                         </div>
                     </div>
                     <div class="form-group">

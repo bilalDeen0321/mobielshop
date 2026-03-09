@@ -32,9 +32,9 @@
 
         <div class="flex items-center gap-2">
             @auth
-                <a href="{{ route('logout') }}" method="POST" class="hidden sm:flex flex-col items-center gap-0.5 text-gray-500 hover:text-primary p-2" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                    <span class="text-[10px]">Logout</span>
+                <a href="{{ route('account.dashboard') }}" class="hidden sm:flex flex-col items-center gap-0.5 text-gray-500 hover:text-primary p-2">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    <span class="text-[10px]">My account</span>
                 </a>
             @else
                 <a href="{{ route('login') }}" class="hidden sm:flex flex-col items-center gap-0.5 text-gray-500 hover:text-primary p-2">
@@ -89,7 +89,7 @@
                     } else {
                         data.forEach(function (item) {
                             var url = productBase + '/' + encodeURIComponent(item.slug);
-                            var price = typeof item.price === 'number' ? '$' + item.price.toFixed(2) : '';
+                            var price = typeof item.price === 'number' ? (window.currencySymbol || '£') + item.price.toFixed(2) : '';
                             var row = $('<a href="' + url + '" class="flex items-center justify-between gap-2 px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-0 text-left text-sm"></a>');
                             row.append('<span class="font-medium text-gray-900 truncate">' + $('<div>').text(item.name).html() + '</span>');
                             if (price) row.append('<span class="text-primary font-medium shrink-0">' + price + '</span>');

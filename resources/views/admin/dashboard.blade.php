@@ -4,7 +4,7 @@
 
 @section('content')
 <h3 class="page-title"> Dashboard
-    <small>overview & statistics</small>
+    <small>quick actions & key stats</small>
 </h3>
 <div class="page-bar">
     <ul class="page-breadcrumb">
@@ -16,7 +16,22 @@
         <li><span>Dashboard</span></li>
     </ul>
 </div>
-<div class="row">
+
+{{-- Primary POS shortcut --}}
+<div class="row margin-top-10">
+    <div class="col-md-12">
+        <a href="{{ route('admin.pos.index') }}" class="btn btn-lg green-meadow btn-block" style="padding: 18px 24px; text-align: left; position: relative;">
+            <span class="badge badge-danger" style="position:absolute; top:8px; right:16px; background:#e7505a;">POS</span>
+            <i class="icon-handbag" style="font-size:24px; margin-right:12px;"></i>
+            <span style="font-size:18px; font-weight:600;">Open Point of Sale</span>
+            <br>
+            <span style="opacity:0.9;">Start a new sale quickly for walk‑in customers.</span>
+        </a>
+    </div>
+</div>
+
+{{-- Summary cards --}}
+<div class="row margin-top-20">
     <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
         <div class="dashboard-stat blue">
             <div class="visual">
@@ -28,7 +43,7 @@
                 </div>
                 <div class="desc"> Products </div>
             </div>
-            <a class="more" href="{{ route('admin.products.index') }}"> View more
+            <a class="more" href="{{ route('admin.products.index') }}"> Manage products
                 <i class="m-icon-swapright m-icon-white"></i>
             </a>
         </div>
@@ -36,7 +51,7 @@
     <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
         <div class="dashboard-stat green">
             <div class="visual">
-                <i class="fa fa-folder"></i>
+                <i class="fa fa-folder-open"></i>
             </div>
             <div class="details">
                 <div class="number">
@@ -44,13 +59,100 @@
                 </div>
                 <div class="desc"> Categories </div>
             </div>
-            <a class="more" href="{{ route('admin.categories.index') }}"> View more
+            <a class="more" href="{{ route('admin.categories.index') }}"> Manage categories
+                <i class="m-icon-swapright m-icon-white"></i>
+            </a>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+        <div class="dashboard-stat purple">
+            <div class="visual">
+                <i class="fa fa-tags"></i>
+            </div>
+            <div class="details">
+                <div class="number">
+                    <span data-counter="counterup" data-value="{{ $brandCount }}">0</span>
+                </div>
+                <div class="desc"> Brands </div>
+            </div>
+            <a class="more" href="{{ route('admin.brands.index') }}"> Manage brands
+                <i class="m-icon-swapright m-icon-white"></i>
+            </a>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+        <div class="dashboard-stat yellow">
+            <div class="visual">
+                <i class="fa fa-users"></i>
+            </div>
+            <div class="details">
+                <div class="number">
+                    <span data-counter="counterup" data-value="{{ $userCount }}">0</span>
+                </div>
+                <div class="desc"> Users </div>
+            </div>
+            <a class="more" href="javascript:;"> Website users
                 <i class="m-icon-swapright m-icon-white"></i>
             </a>
         </div>
     </div>
 </div>
+
+{{-- Sales / activity summary --}}
+<div class="row">
+    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+        <div class="dashboard-stat grey-mint">
+            <div class="visual">
+                <i class="icon-docs"></i>
+            </div>
+            <div class="details">
+                <div class="number">
+                    <span data-counter="counterup" data-value="{{ $totalSalesCount }}">0</span>
+                </div>
+                <div class="desc"> Total sales (POS) </div>
+            </div>
+            <a class="more" href="{{ route('admin.sales.index') }}"> View sales history
+                <i class="m-icon-swapright m-icon-white"></i>
+            </a>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+        <div class="dashboard-stat green-jungle">
+            <div class="visual">
+                <i class="icon-calendar"></i>
+            </div>
+            <div class="details">
+                <div class="number">
+                    <span data-counter="counterup" data-value="{{ $todaySalesCount }}">0</span>
+                </div>
+                <div class="desc"> Sales today </div>
+            </div>
+            <a class="more" href="{{ route('admin.reports.daily', ['date' => now()->toDateString()]) }}"> Today's report
+                <i class="m-icon-swapright m-icon-white"></i>
+            </a>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+        <div class="dashboard-stat red-intense">
+            <div class="visual">
+                <i class="icon-wallet"></i>
+            </div>
+            <div class="details">
+                <div class="number">
+                    {{ $currency }}{{ number_format($todaySalesTotal, 2) }}
+                </div>
+                <div class="desc"> Revenue today </div>
+            </div>
+            <a class="more" href="{{ route('admin.reports.daily', ['date' => now()->toDateString()]) }}"> Daily sales report
+                <i class="m-icon-swapright m-icon-white"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
 <div class="clearfix"></div>
+
+{{-- Low stock alert --}}
 @if(isset($lowStockProducts) && $lowStockProducts->isNotEmpty())
 <div class="row margin-top-20">
     <div class="col-md-12">
@@ -61,7 +163,8 @@
                     <span class="caption-subject bold uppercase">Low stock alert</span>
                 </div>
                 <div class="actions">
-                    <a href="{{ route('admin.products.index') }}" class="btn btn-sm red">View all products</a>
+                    <a href="{{ route('admin.reports.low-stock') }}" class="btn btn-sm red">Low stock report</a>
+                    <a href="{{ route('admin.products.index') }}" class="btn btn-sm default">View all products</a>
                 </div>
             </div>
             <div class="portlet-body">

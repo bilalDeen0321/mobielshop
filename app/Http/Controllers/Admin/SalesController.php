@@ -9,7 +9,7 @@ class SalesController extends Controller
 {
     public function index()
     {
-        $sales = Sale::with('admin')->latest()->paginate(20);
+        $sales = Sale::with(['admin', 'customer'])->latest()->paginate(20);
         return view('admin.sales.index', compact('sales'));
     }
 

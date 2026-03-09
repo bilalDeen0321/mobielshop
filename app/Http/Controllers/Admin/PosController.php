@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -14,23 +15,58 @@ class PosController extends Controller
 {
     public function index()
     {
-        return view('admin.pos.index');
+        $categories = Category::orderBy('name')->get();
+        $products = Product::where('is_active', true)
+            ->where('stock_quantity', '>', 0)
+            ->with([
+                'category',
+                'images' => function ($query) {
+                    $query->orderBy('sort_order');
+                },
+            ])
+            ->orderBy('name')
+            ->limit(60)
+            ->get();
+
+        return view('admin.pos.index', compact('categories', 'products'));
     }
 
     public function searchProducts(Request $request)
     {
-        $q = $request->input('q', '');
+        $q = trim((string) $request->input('q', ''));
+        $categoryId = $request->input('category_id');
+        $inStockOnly = (bool) $request->input('in_stock', false);
+
         $products = Product::where('is_active', true)
-            ->where(function ($query) use ($q) {
-                $query->where('name', 'like', '%' . $q . '%')
-                    ->orWhere('brand', 'like', '%' . $q . '%')
-                    ->orWhere('slug', 'like', '%' . $q . '%');
+            ->when($categoryId, function ($query) use ($categoryId) {
+                $query->where('category_id', $categoryId);
             })
-            ->with('category')
+            ->when($inStockOnly, function ($query) {
+                $query->where('stock_quantity', '>', 0);
+            })
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('name', 'like', '%' . $q . '%')
+                        ->orWhere('brand', 'like', '%' . $q . '%')
+                        ->orWhere('slug', 'like', '%' . $q . '%')
+                        ->orWhere('id', $q)
+                        ->orWhereHas('category', function ($catQuery) use ($q) {
+                            $catQuery->where('name', 'like', '%' . $q . '%');
+                        });
+                });
+            })
+            ->with([
+                'category',
+                'images' => function ($query) {
+                    $query->orderBy('sort_order');
+                },
+            ])
             ->orderBy('name')
-            ->limit(30)
+            ->limit(40)
             ->get()
             ->map(function ($p) {
+                $image = $p->images->first();
+
                 return [
                     'id' => $p->id,
                     'name' => $p->name,
@@ -38,8 +74,11 @@ class PosController extends Controller
                     'retail_price' => (float) $p->retail_price,
                     'stock_quantity' => (int) $p->stock_quantity,
                     'category' => $p->category?->name,
+                    'sku' => (string) $p->id,
+                    'image_url' => $image?->url,
                 ];
             });
+
         return response()->json($products);
     }
 
@@ -53,6 +92,7 @@ class PosController extends Controller
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
             'payment_method' => ['nullable', 'string', 'in:cash,card,transfer,other'],
+            'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
             'customer_name' => ['nullable', 'string', 'max:255'],
             'customer_phone' => ['nullable', 'string', 'max:50'],
             'customer_email' => ['nullable', 'email'],
@@ -92,9 +132,11 @@ class PosController extends Controller
         try {
             $sale = new Sale();
             $sale->sale_number = Sale::generateSaleNumber();
-            $sale->customer_name = $request->input('customer_name');
-            $sale->customer_phone = $request->input('customer_phone');
-            $sale->customer_email = $request->input('customer_email');
+            $sale->customer_id = $request->input('customer_id');
+            $customer = $sale->customer_id ? \App\Models\Customer::find($sale->customer_id) : null;
+            $sale->customer_name = $request->input('customer_name') ?: $customer?->name;
+            $sale->customer_phone = $request->input('customer_phone') ?: $customer?->phone;
+            $sale->customer_email = $request->input('customer_email') ?: $customer?->email;
             $sale->payment_method = $request->input('payment_method', 'cash');
             $sale->subtotal = $subtotal;
             $sale->tax_rate = $taxRate;

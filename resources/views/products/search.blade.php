@@ -45,7 +45,7 @@
                         <input type="range" id="price-slider-min" min="{{ (int) $priceMin }}" max="{{ (int) $priceMax }}" value="{{ $minPrice !== null ? (int) $minPrice : (int) $priceMin }}" class="w-full h-2 accent-primary">
                         <input type="range" id="price-slider-max" min="{{ (int) $priceMin }}" max="{{ (int) $priceMax }}" value="{{ $maxPrice !== null ? (int) $maxPrice : (int) $priceMax }}" class="w-full h-2 accent-primary mt-1">
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">£<span id="price-display-min">{{ $minPrice !== null ? (int) $minPrice : (int) $priceMin }}</span> – £<span id="price-display-max">{{ $maxPrice !== null ? (int) $maxPrice : (int) $priceMax }}</span></p>
+                    <p class="text-xs text-gray-500 mt-1">{{ $currency }}<span id="price-display-min">{{ $minPrice !== null ? (int) $minPrice : (int) $priceMin }}</span> – {{ $currency }}<span id="price-display-max">{{ $maxPrice !== null ? (int) $maxPrice : (int) $priceMax }}</span></p>
                 </div>
 
                 {{-- Category --}}

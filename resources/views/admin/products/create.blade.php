@@ -127,7 +127,8 @@
                         <div class="form-group">
                             <label class="col-md-2 control-label">Description</label>
                             <div class="col-md-8">
-                                <textarea name="description" class="form-control" rows="4">{{ old('description') }}</textarea>
+                                <textarea id="product-description" name="description" class="form-control" rows="6">{{ old('description') }}</textarea>
+                                <span class="help-block">You can format this description (headings, lists, bold text, etc.).</span>
                             </div>
                         </div>
                         <div class="form-group">
@@ -177,6 +178,7 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
 <script>
 (function() {
     var dropzone = document.getElementById('create-product-dropzone');
@@ -224,5 +226,11 @@
         });
     }
 })();
+if (typeof CKEDITOR !== 'undefined') {
+    CKEDITOR.replace('product-description', {
+        height: 220,
+        removeButtons: 'Source,Image,Flash,Table,HorizontalRule,SpecialChar,Maximize,About'
+    });
+}
 </script>
 @endpush

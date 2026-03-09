@@ -34,7 +34,7 @@
                         <tr>
                             <td>{{ $sale->sale_number }}</td>
                             <td>{{ $sale->created_at->format('d M Y H:i') }}</td>
-                            <td>£{{ number_format($sale->total, 2) }}</td>
+                            <td>{{ $currency }}{{ number_format($sale->total, 2) }}</td>
                             <td><a href="{{ route('admin.sales.show', $sale) }}" class="btn btn-xs default">View</a></td>
                         </tr>
                         @empty
