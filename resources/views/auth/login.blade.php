@@ -22,6 +22,19 @@
             Login
         </button>
     </form>
+    <div class="mt-6 rounded-md border border-gray-200 bg-white p-4">
+        <h2 class="text-sm font-semibold text-gray-900 mb-2">Need a new verification email?</h2>
+        <p class="text-xs text-gray-500 mb-3">If you registered but did not receive the email, enter your address below and we will send a new verification link.</p>
+        <form method="POST" action="{{ route('verification.send') }}" class="space-y-3">
+            @csrf
+            <input type="email" name="email" value="{{ old('email') }}" required
+                placeholder="Enter your email address"
+                class="w-full h-10 px-3 rounded-md border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
+            <button type="submit" class="w-full px-4 py-2.5 rounded-md border border-primary text-primary text-sm font-semibold hover:bg-primary hover:text-white transition-colors">
+                Resend verification email
+            </button>
+        </form>
+    </div>
     <p class="mt-4 text-xs text-gray-500">Don't have an account? <a href="{{ route('register') }}" class="text-primary font-medium hover:underline">Register</a></p>
 </section>
 @endsection

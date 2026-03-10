@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('customer_email');
             $table->string('customer_phone', 50)->nullable();
             $table->text('shipping_address');
-            $table->string('status', 32)->default('pending'); // pending, processing, completed, cancelled
+            $table->string('status', 32)->default('pending'); // pending, processing, completed, rejected
             $table->string('payment_method', 50)->default('cod');
             $table->string('payment_status', 32)->default('unpaid');
             $table->decimal('subtotal', 12, 2)->default(0);

@@ -144,6 +144,15 @@
                             <span class="title">Sales</span>
                         </a>
                     </li>
+                    <li class="nav-item {{ request()->routeIs('admin.orders.*') ? 'start active open' : '' }}">
+                        <a href="{{ route('admin.orders.index') }}" class="nav-link">
+                            <i class="icon-basket-loaded"></i>
+                            <span class="title">Orders</span>
+                            @if(isset($pendingWebsiteOrdersCount) && $pendingWebsiteOrdersCount > 0)
+                            <span class="badge badge-danger">{{ $pendingWebsiteOrdersCount }}</span>
+                            @endif
+                        </a>
+                    </li>
                     <li class="nav-item {{ request()->routeIs('admin.customers.*') ? 'start active open' : '' }}">
                         <a href="{{ route('admin.customers.index') }}" class="nav-link">
                             <i class="icon-users"></i>

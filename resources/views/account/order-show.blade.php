@@ -17,7 +17,7 @@
             <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold capitalize
                 @if($order->status === 'completed') bg-green-50 text-green-700
                 @elseif($order->status === 'processing') bg-blue-50 text-blue-700
-                @elseif($order->status === 'cancelled') bg-red-50 text-red-700
+                @elseif($order->status === 'rejected') bg-red-50 text-red-700
                 @else bg-yellow-50 text-yellow-800 @endif">
                 {{ $order->status }}
             </span>

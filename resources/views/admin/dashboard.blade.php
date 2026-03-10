@@ -30,6 +30,53 @@
     </div>
 </div>
 
+@if(isset($pendingWebsiteOrdersCount) && $pendingWebsiteOrdersCount > 0)
+<div class="row margin-top-20">
+    <div class="col-md-12">
+        <div class="portlet light" style="border-left: 4px solid #f1c40f;">
+            <div class="portlet-title">
+                <div class="caption font-dark">
+                    <i class="fa fa-bell font-yellow-gold"></i>
+                    <span class="caption-subject bold uppercase">New Website Orders</span>
+                </div>
+                <div class="actions">
+                    <a href="{{ route('admin.orders.index') }}" class="btn btn-sm yellow-gold">Open orders module</a>
+                </div>
+            </div>
+            <div class="portlet-body">
+                <p class="text-muted">
+                    You have <strong>{{ $pendingWebsiteOrdersCount }}</strong> pending website order{{ $pendingWebsiteOrdersCount !== 1 ? 's' : '' }} waiting for review.
+                </p>
+                <div class="table-scrollable">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Total</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($recentPendingWebsiteOrders as $order)
+                            <tr>
+                                <td>{{ $order->order_number }}</td>
+                                <td>{{ $order->customer_name }}</td>
+                                <td>{{ optional($order->placed_at ?? $order->created_at)->format('d M Y H:i') }}</td>
+                                <td>{{ $currency }}{{ number_format($order->total, 2) }}</td>
+                                <td><a href="{{ route('admin.orders.show', $order) }}" class="btn btn-xs blue">Review</a></td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 {{-- Summary cards --}}
 <div class="row margin-top-20">
     <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">

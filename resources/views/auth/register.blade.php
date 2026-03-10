@@ -6,6 +6,9 @@
 <section class="container mx-auto px-4 py-10 max-w-md">
     <h1 class="text-3xl font-display font-bold text-gray-900 mb-2">Create account</h1>
     <p class="text-sm text-gray-600 mb-6">Create an account to checkout faster, track orders and manage your wishlist.</p>
+    <div class="mb-6 rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+        After registration, we will send a verification email to your inbox. You must verify your email before you can log in.
+    </div>
     <form method="POST" action="{{ route('register') }}" class="space-y-4">
         @csrf
         <div>
@@ -16,6 +19,11 @@
         <div>
             <label class="block text-xs font-medium text-gray-500 mb-1" for="email">Email</label>
             <input id="email" type="email" name="email" value="{{ old('email') }}" required
+                class="w-full h-10 px-3 rounded-md border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1" for="phone">Phone</label>
+            <input id="phone" type="text" name="phone" value="{{ old('phone') }}"
                 class="w-full h-10 px-3 rounded-md border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
         </div>
         <div>

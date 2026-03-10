@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
@@ -20,6 +21,14 @@ class AuthController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
+
+        $user = User::where('email', $credentials['email'])->first();
+
+        if ($user && Hash::check($credentials['password'], $user->password) && !$user->hasVerifiedEmail()) {
+            return back()->withErrors([
+                'email' => 'Please verify your email before login. Check your inbox for the verification link.',
+            ])->onlyInput('email');
+        }
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
@@ -52,9 +61,12 @@ class AuthController extends Controller
             'phone' => $validated['phone'] ?? null,
         ]);
 
-        Auth::login($user);
+        $user->sendEmailVerificationNotification();
 
-        return redirect(route('home'));
+        return redirect(route('login'))->with(
+            'success',
+            'Registration successful. We sent a verification email to ' . $user->email . '. Please verify your email before login.'
+        );
     }
 
     public function logout(Request $request)

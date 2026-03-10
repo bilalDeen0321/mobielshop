@@ -12,10 +12,13 @@ use App\Http\Controllers\Admin\ReportsController as AdminReportsController;
 use App\Http\Controllers\Admin\ReturnController as AdminReturnController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\PosController as AdminPosController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\SalesController as AdminSalesController;
 use App\Http\Controllers\Admin\SupplierController as AdminSupplierController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\AccountController;
@@ -43,7 +46,10 @@ Route::post('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.
 Route::post('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
 Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 Route::get('/wishlist', [PageController::class, 'wishlist'])->name('wishlist');
-Route::get('/checkout', [PageController::class, 'checkout'])->name('checkout');
+Route::middleware('auth')->group(function () {
+    Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout');
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+});
 
 // User account (requires login)
 Route::middleware('auth')->group(function () {
@@ -62,6 +68,12 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login')->middl
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register')->middleware('guest');
 Route::post('/register', [AuthController::class, 'register']);
+Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+    ->middleware(['signed', 'throttle:6,1'])
+    ->name('verification.verify');
+Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
+    ->middleware(['guest', 'throttle:6,1'])
+    ->name('verification.send');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
 // Redirect /admin to /admin-panel (so Laravel admin routes work; public/admin is used for theme assets)
@@ -89,6 +101,9 @@ Route::prefix('admin-panel')->name('admin.')->group(function () {
         Route::get('pos', [AdminPosController::class, 'index'])->name('pos.index');
         Route::get('pos/search-products', [AdminPosController::class, 'searchProducts'])->name('pos.search');
         Route::post('pos/complete-sale', [AdminPosController::class, 'completeSale'])->name('pos.complete');
+        Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
+        Route::get('orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
+        Route::patch('orders/{order}', [AdminOrderController::class, 'update'])->name('orders.update');
         Route::get('sales', [AdminSalesController::class, 'index'])->name('sales.index');
         Route::get('sales/{sale}', [AdminSalesController::class, 'show'])->name('sales.show');
         Route::resource('customers', AdminCustomerController::class)->names('customers');

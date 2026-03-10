@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\Setting;
 use Illuminate\Pagination\Paginator;
@@ -30,7 +31,9 @@ class AppServiceProvider extends ServiceProvider
         View::composer('admin.layout', function ($view) {
             $lowStockCount = Product::whereColumn('stock_quantity', '<', 'minimum_stock_limit')
                 ->where('minimum_stock_limit', '>', 0)->count();
+            $pendingWebsiteOrdersCount = Order::where('status', 'pending')->count();
             $view->with('lowStockCount', $lowStockCount);
+            $view->with('pendingWebsiteOrdersCount', $pendingWebsiteOrdersCount);
         });
         Paginator::useBootstrapFive();
     }
