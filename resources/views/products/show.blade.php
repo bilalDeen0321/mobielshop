@@ -173,7 +173,7 @@
         if ($hasWarranty) $tabs[] = 'warranty';
         if ($hasOther) $tabs[] = 'other';
         $activeTab = $tabs[0] ?? null;
-    @endphp
+    @endphp   
 
     {{-- Description & policies tabs under gallery --}}
     @if($activeTab)
