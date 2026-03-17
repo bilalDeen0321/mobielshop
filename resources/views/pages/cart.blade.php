@@ -16,7 +16,18 @@
                     <img src="{{ $img ? asset($img->url) : 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=100&h=100&fit=crop' }}" alt="{{ $item['product']->name }}" class="w-16 h-16 object-contain bg-gray-100 rounded-md">
                     <div class="flex-1">
                         <p class="text-sm font-semibold text-gray-900">{{ $item['product']->name }}</p>
-                        <p class="text-xs text-gray-500">{{ $item['product']->brand }}{!! $item['variant']->variant_name ? ' · ' . e($item['variant']->variant_name) : '' !!}</p>
+                        <p class="text-xs text-gray-500">{{ $item['product']->brand }}</p>
+                        @if(!empty($item['selected_options']) && is_array($item['selected_options']))
+                            <ul class="text-xs text-gray-600 mt-1 space-y-0.5 list-none" aria-label="Selected options">
+                                @foreach($item['selected_options'] as $opt)
+                                    <li><strong>{{ $opt['label'] }}:</strong> {{ $opt['value'] }}</li>
+                                @endforeach
+                            </ul>
+                        @elseif(!empty($item['selected_options']))
+                            <p class="text-xs text-gray-600 mt-1"><strong>Selected variant:</strong> {{ $item['selected_options'] }}</p>
+                        @elseif(!empty($item['variant']->variant_name))
+                            <p class="text-xs text-gray-600 mt-1"><strong>Selected variant:</strong> {{ $item['variant']->variant_name }}</p>
+                        @endif
                         <p class="text-sm font-medium text-primary mt-1">{{ $currency }}{{ number_format((float) $item['variant']->price, 2) }}</p>
                     </div>
                     <div class="flex items-center gap-2">

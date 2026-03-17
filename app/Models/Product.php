@@ -11,10 +11,14 @@ class Product extends Model
     protected $fillable = [
         'category_id', 'brand_id', 'name', 'slug', 'base_price', 'wholesale_price', 'retail_price', 'stock_quantity', 'minimum_stock_limit', 'is_on_sale', 'sale_discount_percent', 'brand', 'condition', 'is_active',
         'description', 'payment_info', 'shipping_info', 'returns_info', 'warranty_info', 'other_policies',
+        'show_color', 'show_storage', 'show_condition',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'show_color' => 'boolean',
+        'show_storage' => 'boolean',
+        'show_condition' => 'boolean',
         'base_price' => 'decimal:2',
         'wholesale_price' => 'decimal:2',
         'retail_price' => 'decimal:2',
@@ -61,5 +65,10 @@ class Product extends Model
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
+    }
+
+    public function optionDefinitions(): HasMany
+    {
+        return $this->hasMany(ProductOptionDefinition::class)->orderBy('sort_order');
     }
 }

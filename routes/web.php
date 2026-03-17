@@ -89,6 +89,7 @@ Route::prefix('admin-panel')->name('admin.')->group(function () {
 
     Route::middleware('admin.auth')->group(function () {
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::patch('products/{product}/status', [AdminProductController::class, 'updateStatus'])->name('products.status');
         Route::resource('products', AdminProductController::class)->names('products');
         Route::resource('categories', AdminCategoryController::class)->names('categories');
         Route::resource('brands', AdminBrandController::class)->names('brands');

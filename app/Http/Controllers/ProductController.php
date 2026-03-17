@@ -158,7 +158,7 @@ class ProductController extends Controller
         $product = Product::query()
             ->where('slug', $slug)
             ->where('is_active', true)
-            ->with(['category', 'variants.inventory', 'images'])
+            ->with(['category', 'variants.inventory', 'images', 'optionDefinitions.values'])
             ->firstOrFail();
 
         $sessionId = $request->session()->getId();

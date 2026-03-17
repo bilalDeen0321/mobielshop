@@ -32,7 +32,7 @@
                     <thead>
                         <tr>
                             <th>Product</th>
-                            <th>Variant</th>
+                            <th>Selected options</th>
                             <th>Qty</th>
                             <th>Unit Price</th>
                             <th>Total</th>
@@ -41,8 +41,25 @@
                     <tbody>
                         @foreach($order->items as $item)
                             <tr>
-                                <td>{{ $item->product_name }}</td>
-                                <td>{{ $item->variant_name ?: '—' }}</td>
+                                <td><strong>{{ $item->product_name }}</strong></td>
+                                <td>
+                                    @if(!empty(trim($item->selected_options ?? '')))
+                                        @php
+                                            $opts = array_map('trim', explode(',', $item->selected_options));
+                                        @endphp
+                                        <ul class="list-unstyled mb-0 text-muted" style="font-size: 0.9em;">
+                                            @foreach($opts as $opt)
+                                                @if($opt)
+                                                    <li>{{ $opt }}</li>
+                                                @endif
+                                            @endforeach
+                                        </ul>
+                                    @elseif(!empty(trim($item->variant_name ?? '')))
+                                        {{ $item->variant_name }}
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
                                 <td>{{ $item->quantity }}</td>
                                 <td>{{ $currency }}{{ number_format($item->unit_price, 2) }}</td>
                                 <td>{{ $currency }}{{ number_format($item->line_total, 2) }}</td>
@@ -104,16 +121,22 @@
                     </div>
                 </div>
 
-                <p><strong>Name:</strong> {{ $order->customer_name }}</p>
-                <p><strong>Email:</strong> {{ $order->customer_email }}</p>
-                <p><strong>Phone:</strong> {{ $order->customer_phone ?: '—' }}</p>
-                <p><strong>Date:</strong> {{ optional($order->placed_at ?? $order->created_at)->format('d M Y, H:i') }}</p>
-                <p><strong>Status:</strong> {{ ucfirst($order->status) }}</p>
-                <p><strong>Payment:</strong> {{ ucfirst($order->payment_method) }} / {{ ucfirst($order->payment_status) }}</p>
-                @if($order->processed_at)
-                    <p><strong>Processed at:</strong> {{ $order->processed_at->format('d M Y, H:i') }}</p>
-                @endif
-                <hr>
+                <p><strong>Customer details</strong></p>
+                <table class="table table-condensed margin-bottom-15" style="background: transparent;">
+                    <tr><td style="border: none; padding: 4px 8px 4px 0;"><strong>Name</strong></td><td style="border: none; padding: 4px 0;">{{ $order->customer_name }}</td></tr>
+                    <tr><td style="border: none; padding: 4px 8px 4px 0;"><strong>Email</strong></td><td style="border: none; padding: 4px 0;">{{ $order->customer_email }}</td></tr>
+                    <tr><td style="border: none; padding: 4px 8px 4px 0;"><strong>Phone</strong></td><td style="border: none; padding: 4px 0;">{{ $order->customer_phone ?: '—' }}</td></tr>
+                    <tr><td style="border: none; padding: 4px 8px 4px 0;"><strong>Order date</strong></td><td style="border: none; padding: 4px 0;">{{ optional($order->placed_at ?? $order->created_at)->format('d M Y, H:i') }}</td></tr>
+                    <tr><td style="border: none; padding: 4px 8px 4px 0;"><strong>Status</strong></td><td style="border: none; padding: 4px 0;">{{ ucfirst($order->status) }}</td></tr>
+                    <tr><td style="border: none; padding: 4px 8px 4px 0;"><strong>Payment</strong></td><td style="border: none; padding: 4px 0;">{{ ucfirst($order->payment_method) }} / {{ ucfirst($order->payment_status) }}</td></tr>
+                    @if($order->processed_at)
+                        <tr><td style="border: none; padding: 4px 8px 4px 0;"><strong>Processed at</strong></td><td style="border: none; padding: 4px 0;">{{ $order->processed_at->format('d M Y, H:i') }}</td></tr>
+                    @endif
+                </table>
+
+                <p><strong>Postal / shipping address</strong></p>
+                <p class="text-muted" style="white-space: pre-line; margin-bottom: 15px;">{{ $order->shipping_address }}</p>
+
                 <form action="{{ route('admin.orders.update', $order) }}" method="POST" class="margin-bottom-15">
                     @csrf
                     @method('PATCH')
@@ -123,9 +146,6 @@
                     </div>
                     <button type="submit" class="btn btn-sm blue">Save tracking</button>
                 </form>
-                <hr>
-                <p><strong>Shipping address</strong></p>
-                <p class="text-muted" style="white-space: pre-line;">{{ $order->shipping_address }}</p>
                 <hr>
                 <p><strong>Card details</strong></p>
                 <p><strong>Name on card:</strong> {{ $order->card_name ?: '—' }}</p>

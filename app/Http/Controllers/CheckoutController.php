@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -131,6 +132,7 @@ class CheckoutController extends Controller
                     'variant_id' => $item['variant_id'],
                     'product_name' => $item['product']->name,
                     'variant_name' => $item['variant_name'],
+                    'selected_options' => $item['selected_options'] ?? null,
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
                     'line_total' => $item['line_total'],
@@ -152,6 +154,8 @@ class CheckoutController extends Controller
             }
 
             $request->session()->forget('cart');
+            $request->session()->forget('cart_options');
+            CartItem::where('session_id', $request->session()->getId())->delete();
         });
 
         if (Auth::check()) {
@@ -165,32 +169,45 @@ class CheckoutController extends Controller
 
     private function getCartItems(Request $request)
     {
+        $sessionId = $request->session()->getId();
+        $dbCartItems = CartItem::where('session_id', $sessionId)->get();
+
+        if ($dbCartItems->isNotEmpty()) {
+            return $this->getCartItemsFromDatabase($dbCartItems);
+        }
+
         $cart = $request->session()->get('cart', []);
+        $cartOptions = $request->session()->get('cart_options', []);
         $cartKeys = array_keys($cart);
         $variantIds = array_filter($cartKeys, fn ($key) => (int) $key > 0);
         $productOnlyIds = array_map(fn ($key) => -(int) $key, array_filter($cartKeys, fn ($key) => (int) $key < 0));
 
         $variants = $variantIds
-            ? ProductVariant::with('product', 'inventory')->whereIn('id', $variantIds)->get()->keyBy('id')
+            ? ProductVariant::with('product', 'product.optionDefinitions', 'inventory')->whereIn('id', $variantIds)->get()
             : collect();
         $products = $productOnlyIds
-            ? Product::whereIn('id', $productOnlyIds)->get()->keyBy('id')
+            ? Product::with('optionDefinitions')->whereIn('id', $productOnlyIds)->get()
             : collect();
 
-        return collect($cart)->map(function ($quantity, $key) use ($variants, $products) {
+        return collect($cart)->map(function ($quantity, $key) use ($variants, $products, $cartOptions) {
             $key = (int) $key;
             $quantity = (int) $quantity;
 
             if ($key > 0) {
-                $variant = $variants->get($key);
+                $variant = $variants->firstWhere('id', $key);
                 if (!$variant || !$variant->product || !$variant->product->is_active) {
                     return null;
                 }
-
+                $selectedOptions = $this->formatSelectedOptionsForOrder(
+                    $cartOptions[$key] ?? null,
+                    $variant,
+                    $variant->product
+                );
                 return [
                     'product' => $variant->product,
-                    'variant_id' => $variant->id,
+                    'variant_id' => $key,
                     'variant_name' => $variant->variant_name,
+                    'selected_options' => $selectedOptions,
                     'quantity' => $quantity,
                     'unit_price' => (float) $variant->price,
                     'line_total' => (float) $variant->price * $quantity,
@@ -198,7 +215,7 @@ class CheckoutController extends Controller
                 ];
             }
 
-            $product = $products->get(-$key);
+            $product = $products->firstWhere('id', -$key);
             if (!$product || !$product->is_active) {
                 return null;
             }
@@ -209,11 +226,120 @@ class CheckoutController extends Controller
                 'product' => $product,
                 'variant_id' => null,
                 'variant_name' => null,
+                'selected_options' => null,
                 'quantity' => $quantity,
                 'unit_price' => $price,
                 'line_total' => $price * $quantity,
                 'stock_available' => (int) $product->stock_quantity,
             ];
         })->filter()->values();
+    }
+
+    /** @param \Illuminate\Support\Collection<int, CartItem> $dbCartItems */
+    private function getCartItemsFromDatabase($dbCartItems)
+    {
+        $cartKeys = $dbCartItems->pluck('cart_key')->all();
+        $variantIds = array_values(array_filter($cartKeys, fn ($k) => (int) $k > 0));
+        $productOnlyIds = array_values(array_map(fn ($k) => (int) abs((int) $k), array_filter($cartKeys, fn ($k) => (int) $k < 0)));
+
+        $variants = $variantIds
+            ? ProductVariant::with('product', 'product.optionDefinitions', 'inventory')->whereIn('id', $variantIds)->get()
+            : collect();
+        $products = $productOnlyIds
+            ? Product::with('optionDefinitions')->whereIn('id', $productOnlyIds)->get()
+            : collect();
+
+        return $dbCartItems->map(function ($row) use ($variants, $products) {
+            $key = (int) $row->cart_key;
+            $quantity = (int) $row->quantity;
+            $storedOptions = $row->selected_options_array;
+
+            if ($key > 0) {
+                $variant = $variants->firstWhere('id', $key);
+                if (!$variant || !$variant->product || !$variant->product->is_active) {
+                    return null;
+                }
+                $selectedOptions = $this->formatSelectedOptionsForOrder($storedOptions, $variant, $variant->product);
+                return [
+                    'product' => $variant->product,
+                    'variant_id' => $key,
+                    'variant_name' => $variant->variant_name,
+                    'selected_options' => $selectedOptions,
+                    'quantity' => $quantity,
+                    'unit_price' => (float) $variant->price,
+                    'line_total' => (float) $variant->price * $quantity,
+                    'stock_available' => (int) $variant->stock,
+                ];
+            }
+
+            $product = $products->firstWhere('id', -$key);
+            if (!$product || !$product->is_active) {
+                return null;
+            }
+            $price = (float) ($product->sale_price ?? $product->retail_price ?? $product->base_price);
+            return [
+                'product' => $product,
+                'variant_id' => null,
+                'variant_name' => null,
+                'selected_options' => null,
+                'quantity' => $quantity,
+                'unit_price' => $price,
+                'line_total' => $price * $quantity,
+                'stock_available' => (int) $product->stock_quantity,
+            ];
+        })->filter()->values();
+    }
+
+    /**
+     * Format selected options for order_items.selected_options (string). Prefer stored options from cart, else variant attributes.
+     *
+     * @param array<string, string>|null $storedOptions
+     */
+    private function formatSelectedOptionsForOrder(?array $storedOptions, ProductVariant $variant, $product): ?string
+    {
+        $optionLabels = [
+            'color' => 'Color',
+            'storage' => 'Storage',
+            'size' => 'Size',
+            'condition' => 'Condition',
+        ];
+        if ($product && $product->relationLoaded('optionDefinitions') && $product->optionDefinitions->isNotEmpty()) {
+            foreach ($product->optionDefinitions as $def) {
+                $k = is_string($def->option_key) ? strtolower(trim($def->option_key)) : (string) $def->option_key;
+                if ($k !== '' && array_key_exists($k, $optionLabels)) {
+                    $optionLabels[$k] = $def->option_label;
+                }
+            }
+        }
+
+        if ($storedOptions !== null && $storedOptions !== []) {
+            $parts = [];
+            foreach (['color', 'storage', 'size', 'condition'] as $attr) {
+                $val = $storedOptions[$attr] ?? $storedOptions[ucfirst($attr)] ?? null;
+                if ($val !== null && (string) $val !== '') {
+                    $parts[] = ($optionLabels[$attr] ?? ucfirst($attr)) . ': ' . $val;
+                }
+            }
+            if ($parts !== []) {
+                return implode(', ', $parts);
+            }
+        }
+
+        $parts = [];
+        foreach (['color' => 'Color', 'storage' => 'Storage', 'size' => 'Size', 'condition' => 'Condition'] as $attr => $label) {
+            $val = $variant->getAttribute($attr);
+            if ($val !== null && (string) $val !== '') {
+                $parts[] = ($optionLabels[$attr] ?? $label) . ': ' . $val;
+            }
+        }
+        if ($parts !== []) {
+            return implode(', ', $parts);
+        }
+
+        if (! empty($variant->variant_name)) {
+            return 'Variant: ' . trim($variant->variant_name);
+        }
+
+        return null;
     }
 }

@@ -13,7 +13,20 @@
     <link href="{{ asset('admin/theme/assets/global/plugins/bootstrap-switch/css/bootstrap-switch.min.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('admin/theme/assets/global/css/components.min.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('admin/theme/assets/global/css/plugins.min.css') }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('admin/theme/assets/pages/css/login.min.css') }}" rel="stylesheet" type="text/css" />
+    <style>
+        /* Login page styles (inline so no 404 if theme/pages/css/login.min.css is missing on server) */
+        body.login { background-color: #364150 !important; min-height: 100vh; }
+        .login .logo { margin: 60px auto 0; padding: 15px; text-align: center; }
+        .login .content { background-color: #eceef1; border-radius: 7px; width: 400px; max-width: 90%; margin: 40px auto 10px; padding: 10px 30px 30px; overflow: hidden; }
+        .login .content h3 { color: #4db3a5; text-align: center; font-size: 28px; font-weight: 400 !important; }
+        .login .content .form-control { background-color: #dde3ec; height: 43px; color: #8290a3; border: 1px solid #dde3ec; }
+        .login .content .form-actions { border: 0; border-bottom: 1px solid #eee; padding: 25px 0; margin: 0 -30px 0; padding-left: 30px; padding-right: 30px; }
+        .login .content .form-actions .btn { margin-top: 1px; font-weight: 600; padding: 10px 20px !important; }
+        .login .content .rememberme { margin-left: 8px; margin-top: 10px; }
+        .login .copyright { text-align: center; margin: 30px auto; padding: 10px; color: #7a8ca5; font-size: 13px; }
+        .btn.green { background: #4db3a5; color: #fff; border: none; }
+        .btn.green:hover { background: #45a397; color: #fff; }
+    </style>
 </head>
 <body class=" login">
     <div class="logo">

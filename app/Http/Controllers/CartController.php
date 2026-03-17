@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
@@ -20,17 +21,32 @@ class CartController extends Controller
             'product_id' => 'required|exists:products,id',
             'quantity' => 'integer|min:1',
             'variant_id' => 'nullable|exists:product_variants,id',
+            'color' => 'nullable|string|max:255',
+            'storage' => 'nullable|string|max:255',
+            'size' => 'nullable|string|max:255',
+            'condition' => 'nullable|string|max:255',
         ]);
 
         $productId = (int) $request->product_id;
         $variantId = $request->variant_id ? (int) $request->variant_id : null;
+        $qty = (int) ($request->quantity ?? 1);
+        $sessionId = $request->session()->getId();
 
+        $selectedOptionsJson = null;
         if ($variantId) {
             $variant = ProductVariant::where('id', $variantId)->where('product_id', $productId)->first();
             if (!$variant) {
                 return back()->with('error', 'Invalid variant.');
             }
             $cartKey = $variant->id;
+
+            $selectedOptions = array_filter([
+                'color' => $request->filled('color') ? trim($request->color) : null,
+                'storage' => $request->filled('storage') ? trim($request->storage) : null,
+                'size' => $request->filled('size') ? trim($request->size) : null,
+                'condition' => $request->filled('condition') ? trim($request->condition) : null,
+            ]);
+            $selectedOptionsJson = $selectedOptions !== [] ? json_encode($selectedOptions) : null;
         } else {
             $variant = ProductVariant::where('product_id', $productId)->first();
             if ($variant) {
@@ -44,19 +60,40 @@ class CartController extends Controller
             }
         }
 
-        $cart = session()->get('cart', []);
-        $qty = (int) ($request->quantity ?? 1);
+        $item = CartItem::firstOrNew([
+            'session_id' => $sessionId,
+            'cart_key' => $cartKey,
+        ]);
+        $item->quantity = ($item->exists ? $item->quantity : 0) + $qty;
+        if ($selectedOptionsJson !== null) {
+            $item->selected_options = $selectedOptionsJson;
+        }
+        $item->save();
+
+        $cart = $request->session()->get('cart', []);
         $cart[$cartKey] = ($cart[$cartKey] ?? 0) + $qty;
-        session()->put('cart', $cart);
+        $request->session()->put('cart', $cart);
+        if ($selectedOptionsJson !== null) {
+            $cartOptions = $request->session()->get('cart_options', []);
+            $cartOptions[$cartKey] = json_decode($selectedOptionsJson, true);
+            $request->session()->put('cart_options', $cartOptions);
+        }
 
         return back()->with('success', 'Product added to cart');
     }
 
     public function remove(Request $request, int $id)
     {
+        $sessionId = $request->session()->getId();
+        CartItem::where('session_id', $sessionId)->where('cart_key', $id)->delete();
+
         $cart = session()->get('cart', []);
         unset($cart[$id]);
         session()->put('cart', $cart);
+
+        $cartOptions = session()->get('cart_options', []);
+        unset($cartOptions[$id]);
+        session()->put('cart_options', $cartOptions);
 
         return back();
     }
@@ -64,6 +101,17 @@ class CartController extends Controller
     public function update(Request $request, int $id)
     {
         $qty = max(0, (int) $request->quantity);
+        $sessionId = $request->session()->getId();
+
+        $item = CartItem::where('session_id', $sessionId)->where('cart_key', $id)->first();
+        if ($item) {
+            if ($qty === 0) {
+                $item->delete();
+            } else {
+                $item->update(['quantity' => $qty]);
+            }
+        }
+
         $cart = session()->get('cart', []);
         if ($qty === 0) {
             unset($cart[$id]);
@@ -75,9 +123,11 @@ class CartController extends Controller
         return back();
     }
 
-    public function clear()
+    public function clear(Request $request)
     {
+        CartItem::where('session_id', $request->session()->getId())->delete();
         session()->forget('cart');
+        session()->forget('cart_options');
         return back();
     }
 }

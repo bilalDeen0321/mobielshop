@@ -1,23 +1,31 @@
 @php
-    $colors = [
-        'Black' => '#1a1a1a',
-        'Blue' => '#2563eb',
-        'Gold' => '#d4af37',
-        'Silver' => '#c0c0c0',
-        'White' => '#f5f5f5',
-        'Red' => '#dc2626',
-        'Green' => '#16a34a',
-        'Natural' => '#d4c4a8',
-        'Default' => '#6b7280',
-    ];
     $images = $product->images->isEmpty()
         ? [['url' => 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=800&h=600&fit=crop', 'alt' => $product->name]]
         : $product->images->map(fn ($i) => ['url' => $i->url, 'alt' => $i->alt ?? $product->name])->all();
     $variants = $product->variants;
+
+    // Only show option blocks when admin has configured them and there is a real choice (2+ values)
+    $optionDefinitions = $product->optionDefinitions;
+    $optionBlocks = $optionDefinitions->isEmpty()
+        ? []
+        : collect($optionDefinitions->map(fn ($def) => [
+            'key' => $def->option_key,
+            'label' => $def->option_label,
+            'values' => $def->values->pluck('value')->all(),
+        ])->all())->filter(fn ($block) => count($block['values']) >= 2)->values()->all();
+
+    // Default selected variant: one that matches the first value in each option group
     $selectedVariant = $variants->first();
-    $uniqueColors = $variants->pluck('color')->filter()->unique()->values();
-    $uniqueStorage = $variants->pluck('storage')->filter()->unique()->values();
-    $uniqueCondition = $variants->pluck('condition')->filter()->unique()->values();
+    if ($variants->isNotEmpty() && !empty($optionBlocks)) {
+        $firstValues = collect($optionBlocks)->mapWithKeys(fn ($b) => [$b['key'] => $b['values'][0] ?? null])->filter()->all();
+        $match = $variants->first(function ($v) use ($firstValues) {
+            foreach ($firstValues as $key => $val) {
+                if (($v->$key ?? '') !== $val) return false;
+            }
+            return true;
+        });
+        if ($match) $selectedVariant = $match;
+    }
 @endphp
 @extends('layouts.app')
 
@@ -85,50 +93,29 @@
                 <input type="hidden" name="variant_id" id="variant_id" value="{{ $selectedVariant?->id }}">
                 <input type="hidden" name="quantity" value="1">
 
-                @if($uniqueColors->isNotEmpty())
-                    <div>
-                        <p class="text-sm font-semibold text-gray-900 mb-2">Color</p>
+                @foreach($optionBlocks as $block)
+                    <div class="variant-option-block" data-option-key="{{ $block['key'] }}">
+                        <p class="text-sm font-semibold text-gray-900 mb-2">{{ $block['label'] }} <span class="text-red-500">*</span></p>
                         <div class="flex flex-wrap gap-2">
-                            @foreach($uniqueColors as $c)
-                                <label class="cursor-pointer">
-                                    <input type="radio" name="color" value="{{ $c }}" class="sr-only peer color-radio" {{ ($selectedVariant->color ?? '') === $c ? 'checked' : '' }}>
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border-2 border-gray-200 peer-checked:border-primary peer-checked:ring-2 peer-checked:ring-primary/30">
-                                        <span class="w-4 h-4 rounded-full border border-gray-300 shrink-0" style="background-color: {{ $colors[$c] ?? $colors['Default'] }}"></span>
-                                        <span class="text-sm">{{ $c }}</span>
-                                    </span>
-                                </label>
+                            @foreach($block['values'] as $loopIdx => $val)
+                                @if($block['key'] === 'color')
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="{{ $block['key'] }}" value="{{ $val }}" class="sr-only peer variant-option-radio" {{ $loopIdx === 0 ? 'required' : '' }} {{ (($selectedVariant->{$block['key']} ?? '') === $val) ? 'checked' : '' }}>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border-2 border-gray-200 peer-checked:border-primary peer-checked:ring-2 peer-checked:ring-primary/30">
+                                            <span class="w-4 h-4 rounded-full border border-gray-300 shrink-0 bg-gray-400" title="{{ $val }}"></span>
+                                            <span class="text-sm">{{ $val }}</span>
+                                        </span>
+                                    </label>
+                                @else
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="{{ $block['key'] }}" value="{{ $val }}" class="sr-only peer variant-option-radio" {{ $loopIdx === 0 ? 'required' : '' }} {{ (($selectedVariant->{$block['key']} ?? '') === $val) ? 'checked' : '' }}>
+                                        <span class="inline-block px-4 py-2 rounded-lg border-2 border-gray-200 text-sm font-medium peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary">{{ $val }}</span>
+                                    </label>
+                                @endif
                             @endforeach
                         </div>
                     </div>
-                @endif
-
-                @if($uniqueStorage->isNotEmpty())
-                    <div>
-                        <p class="text-sm font-semibold text-gray-900 mb-2">Storage</p>
-                        <div class="flex flex-wrap gap-2">
-                            @foreach($uniqueStorage as $s)
-                                <label class="cursor-pointer">
-                                    <input type="radio" name="storage" value="{{ $s }}" class="sr-only peer storage-radio" {{ ($selectedVariant->storage ?? '') === $s ? 'checked' : '' }}>
-                                    <span class="inline-block px-4 py-2 rounded-lg border-2 border-gray-200 text-sm font-medium peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary">{{ $s }}</span>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                @if($uniqueCondition->isNotEmpty())
-                    <div>
-                        <p class="text-sm font-semibold text-gray-900 mb-2">Condition</p>
-                        <div class="flex flex-wrap gap-2">
-                            @foreach($uniqueCondition as $cond)
-                                <label class="cursor-pointer">
-                                    <input type="radio" name="condition" value="{{ $cond }}" class="sr-only peer condition-radio" {{ ($selectedVariant->condition ?? '') === $cond ? 'checked' : '' }}>
-                                    <span class="inline-block px-4 py-2 rounded-lg border-2 border-gray-200 text-sm peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary">{{ $cond }}</span>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
+                @endforeach
 
                 <p id="variant-stock" class="text-sm text-gray-600">
                     @if($selectedVariant && ($qty = $selectedVariant->inventory?->quantity ?? 0) > 0)
@@ -308,19 +295,29 @@
             'id' => $v->id,
             'color' => $v->color,
             'storage' => $v->storage,
+            'size' => $v->size,
             'condition' => $v->condition,
             'price' => (float) $v->price,
             'stock' => $v->inventory?->quantity ?? 0,
         ];
     })->values();
+    $productScriptConfig = [
+        'images' => $images,
+        'variants' => $variantsJson->all(),
+        'optionBlocks' => $optionBlocks,
+        'productOnSale' => $product->is_on_sale && $product->sale_price !== null,
+        'productSalePrice' => $product->is_on_sale && $product->sale_price !== null ? (float) $product->sale_price : null,
+    ];
 @endphp
 @push('scripts')
 <script>
 (function () {
-    var images = @json($images);
-    var variants = @json($variantsJson);
-    var productOnSale = {{ $product->is_on_sale && $product->sale_price !== null ? 'true' : 'false' }};
-    var productSalePrice = {{ $product->is_on_sale && $product->sale_price !== null ? (float) $product->sale_price : 'null' }};
+    var config = @json($productScriptConfig);
+    var images = config.images;
+    var variants = config.variants;
+    var optionBlocks = config.optionBlocks;
+    var productOnSale = config.productOnSale;
+    var productSalePrice = config.productSalePrice;
 
     if (images.length > 1) {
         document.querySelectorAll('.gallery-thumb').forEach(function (btn) {
@@ -334,15 +331,19 @@
     }
 
     function getSelected() {
-        var color = document.querySelector('input[name="color"]:checked');
-        var storage = document.querySelector('input[name="storage"]:checked');
-        var condition = document.querySelector('input[name="condition"]:checked');
-        var c = color ? color.value : null;
-        var s = storage ? storage.value : null;
-        var cond = condition ? condition.value : null;
+        var selected = {};
+        (optionBlocks || []).forEach(function (block) {
+            var key = block.key;
+            var radio = document.querySelector('input[name="' + key + '"]:checked');
+            selected[key] = radio ? radio.value : null;
+        });
         for (var i = 0; i < variants.length; i++) {
             var v = variants[i];
-            if ((!c || v.color === c) && (!s || v.storage === s) && (!cond || v.condition === cond)) return v;
+            var match = true;
+            for (var k in selected) {
+                if (selected[k] != null && v[k] !== selected[k]) { match = false; break; }
+            }
+            if (match) return v;
         }
         return variants[0] || null;
     }
@@ -364,7 +365,7 @@
         }
     }
 
-    document.querySelectorAll('.color-radio, .storage-radio, .condition-radio').forEach(function (el) {
+    document.querySelectorAll('.variant-option-radio').forEach(function (el) {
         el.addEventListener('change', updateVariant);
     });
 

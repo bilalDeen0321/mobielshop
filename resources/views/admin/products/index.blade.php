@@ -31,18 +31,43 @@
                 </div>
             </div>
             <div class="portlet-body">
+                @php
+                    $currentSort = request('sort', 'id');
+                    $currentDir = strtolower(request('dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+                    $sortUrl = function($col, $defaultDir = 'asc') use ($currentSort, $currentDir) {
+                        $params = request()->only('q');
+                        $params['sort'] = $col;
+                        $params['dir'] = ($currentSort === $col && $currentDir === 'asc') ? 'desc' : 'asc';
+                        return route('admin.products.index', $params);
+                    };
+                    $sortIcon = function($col) use ($currentSort, $currentDir) {
+                        if ($currentSort !== $col) return ' <i class="fa fa-sort text-muted" style="font-size:11px;"></i>';
+                        return $currentDir === 'asc' ? ' <i class="fa fa-sort-asc"></i>' : ' <i class="fa fa-sort-desc"></i>';
+                    };
+                @endphp
+                <form method="GET" action="{{ route('admin.products.index') }}" id="product-search-form" class="form-inline margin-bottom-15" role="form">
+                    <div class="form-group">
+                        <input type="text" name="q" id="product-search-input" class="form-control input-medium" placeholder="Search by name, slug, brand, category..." value="{{ request('q') }}" style="min-width:260px;" autocomplete="off">
+                    </div>
+                    <input type="hidden" name="sort" value="{{ $currentSort }}">
+                    <input type="hidden" name="dir" value="{{ $currentDir }}">
+                    <button type="submit" class="btn blue"><i class="fa fa-search"></i> Search</button>
+                    @if(request('q'))
+                        <a href="{{ route('admin.products.index') }}" class="btn default">Clear</a>
+                    @endif
+                </form>
                 <div class="table-scrollable">
                     <table class="table table-striped table-bordered table-hover">
                         <thead>
                             <tr>
                                 <th> # </th>
-                                <th> Name </th>
-                                <th> Category </th>
-                                <th> Brand </th>
-                                <th> Wholesale (cost) </th>
-                                <th> Retail (selling) </th>
-                                <th> Profit </th>
-                                <th> Stock </th>
+                                <th><a href="{{ $sortUrl('name') }}" class="sortable-th"> Name{!! $sortIcon('name') !!}</a></th>
+                                <th><a href="{{ $sortUrl('category') }}" class="sortable-th"> Category{!! $sortIcon('category') !!}</a></th>
+                                <th><a href="{{ $sortUrl('brand') }}" class="sortable-th"> Brand{!! $sortIcon('brand') !!}</a></th>
+                                <th><a href="{{ $sortUrl('wholesale_price') }}" class="sortable-th"> Wholesale (cost){!! $sortIcon('wholesale_price') !!}</a></th>
+                                <th><a href="{{ $sortUrl('retail_price') }}" class="sortable-th"> Retail (selling){!! $sortIcon('retail_price') !!}</a></th>
+                                <th><a href="{{ $sortUrl('profit') }}" class="sortable-th"> Profit{!! $sortIcon('profit') !!}</a></th>
+                                <th><a href="{{ $sortUrl('stock_quantity') }}" class="sortable-th"> Stock{!! $sortIcon('stock_quantity') !!}</a></th>
                                 <th> Status </th>
                                 <th> Actions </th>
                             </tr>
@@ -68,11 +93,11 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if($product->is_active)
-                                        <span class="label label-sm label-success"> Active </span>
-                                    @else
-                                        <span class="label label-sm label-default"> Inactive </span>
-                                    @endif
+                                    <label class="product-status-toggle mt-checkbox mt-checkbox-outline" title="{{ $product->is_active ? 'Active (click to deactivate)' : 'Inactive (click to activate)' }}">
+                                        <input type="checkbox" class="status-checkbox" data-product-id="{{ $product->id }}" data-url="{{ route('admin.products.status', $product) }}" {{ $product->is_active ? 'checked' : '' }}>
+                                        <span class="status-label">{{ $product->is_active ? ' Active ' : ' Inactive ' }}</span>
+                                        <span></span>
+                                    </label>
                                 </td>
                                 <td>
                                     <button type="button" class="btn btn-xs blue btn-edit-product" data-id="{{ $product->id }}"> Edit </button>
@@ -240,6 +265,17 @@
                     </div>
 
                     <div class="form-section" style="margin-bottom: 20px;">
+                        <h5 style="margin: 0 0 14px 0; padding-bottom: 8px; border-bottom: 2px solid #e0e0e0; color: #555; font-weight: 600;">Variant options (Color, Storage, Size, Condition)</h5>
+                        <p class="text-muted" style="font-size: 12px; margin-bottom: 12px;">Add option types and their values. These appear on the product page so customers can pick e.g. Color, Storage, Size. Each option can have multiple values. Variants must match these values (color, storage, size, condition on each variant).</p>
+                        <div id="product-variant-options-container">
+                            <!-- option blocks appended by JS -->
+                        </div>
+                        <button type="button" class="btn btn-sm default mt-2" id="btn-add-variant-option">
+                            <i class="fa fa-plus"></i> Add option (Color, Storage, Size, Condition)
+                        </button>
+                    </div>
+
+                    <div class="form-section" style="margin-bottom: 20px;">
                         <h5 style="margin: 0 0 14px 0; padding-bottom: 8px; border-bottom: 2px solid #e0e0e0; color: #555; font-weight: 600;">Description & policies</h5>
                         <div class="form-group">
                             <label for="product-description-modal">Description</label>
@@ -305,10 +341,30 @@
 #productModal .form-section h5 { font-size: 14px; }
 #product-form .error { color: #e73d4a; font-size: 12px; margin-top: 4px; }
 #product-form input.error, #product-form select.error { border-color: #e73d4a; }
+.sortable-th { color: inherit; text-decoration: none; font-weight: inherit; }
+.sortable-th:hover { color: #3598dc; text-decoration: none; }
+.product-status-toggle { cursor: pointer; margin: 0; font-weight: normal; display: inline-block; }
+.product-status-toggle .status-label { margin-left: 4px; }
+.product-status-toggle input.status-checkbox { margin-right: 2px; }
 </style>
 @endpush
 
 @push('scripts')
+<script>
+(function() {
+    var searchInput = document.getElementById('product-search-input');
+    var searchForm = document.getElementById('product-search-form');
+    if (searchInput && searchForm) {
+        var debounceTimer;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function() {
+                searchForm.submit();
+            }, 350);
+        });
+    }
+})();
+</script>
 <script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
 <script src="{{ asset('admin/theme/assets/global/plugins/dropzone/dropzone.min.js') }}"></script>
 <script>
@@ -388,6 +444,83 @@ if (typeof Dropzone !== 'undefined') { Dropzone.autoDiscover = false; }
     form.find('#product-retail, #product-sale-discount').on('input change', updateDiscountedPrice);
     form.find('#product-on-sale').on('change', updateDiscountedPrice);
 
+    var OPTION_KEYS = [
+        { key: 'color', label: 'Color' },
+        { key: 'storage', label: 'Storage' },
+        { key: 'size', label: 'Size' },
+        { key: 'condition', label: 'Condition' }
+    ];
+    var optionBlockIndex = 0;
+    var optionContainer = $('#product-variant-options-container');
+
+    function addOptionBlock(data) {
+        data = data || { key: 'color', label: 'Color', values: [''] };
+        var idx = optionBlockIndex++;
+        var block = $('<div class="variant-option-block panel panel-default" style="margin-bottom:12px; padding:10px;" data-index="' + idx + '"></div>');
+        var keySelect = $('<select class="form-control input-sm option-key" name="option_definitions[' + idx + '][key]" style="display:inline-block;width:120px;"></select>');
+        OPTION_KEYS.forEach(function(o) {
+            keySelect.append($('<option value="' + o.key + '">' + o.label + '</option>'));
+        });
+        keySelect.val(data.key || 'color');
+        var labelInput = $('<input type="text" class="form-control input-sm option-label" name="option_definitions[' + idx + '][label]" placeholder="Label" style="display:inline-block;width:100px;margin-left:6px;">');
+        labelInput.val(data.label || '');
+        var valuesWrap = $('<div class="option-values-wrap mt-2"></div>');
+        var values = (data.values && data.values.length) ? data.values : [''];
+        values.forEach(function(v) {
+            var row = $('<div class="option-value-row" style="margin-bottom:6px;"></div>');
+            var valStr = (v != null && typeof v === 'object' && v.value !== undefined) ? v.value : (v || '');
+            var input = $('<input type="text" class="form-control input-sm" name="option_definitions[' + idx + '][values][]" placeholder="Value" style="display:inline-block;width:150px;">');
+            input.val(valStr);
+            row.append(input);
+            row.append($('<button type="button" class="btn btn-xs default remove-value" style="margin-left:4px;">&times;</button>'));
+            row.find('.remove-value').on('click', function() {
+                if (valuesWrap.find('.option-value-row').length > 1) row.remove();
+            });
+            valuesWrap.append(row);
+        });
+        var addValBtn = $('<button type="button" class="btn btn-xs green add-value mt-1">+ Add value</button>');
+        addValBtn.on('click', function() {
+            var row = $('<div class="option-value-row" style="margin-bottom:6px;"></div>');
+            row.append($('<input type="text" class="form-control input-sm" name="option_definitions[' + idx + '][values][]" placeholder="Value" style="display:inline-block;width:150px;">'));
+            row.append($('<button type="button" class="btn btn-xs default remove-value" style="margin-left:4px;">&times;</button>'));
+            row.find('.remove-value').on('click', function() {
+                if (valuesWrap.find('.option-value-row').length > 1) row.remove();
+            });
+            valuesWrap.append(row);
+        });
+        var removeOptBtn = $('<button type="button" class="btn btn-xs red btn-remove-option" style="margin-left:8px;">Remove option</button>');
+        removeOptBtn.on('click', function() { block.remove(); });
+        keySelect.on('change', function() {
+            var v = keySelect.val();
+            var sel = OPTION_KEYS.find(function(o) { return o.key === v; });
+            if (sel) labelInput.val(sel.label);
+        });
+        block.append($('<div class="row"><div class="col-md-12"></div></div>').find('.col-md-12').append(keySelect).append(labelInput).append(removeOptBtn).end());
+        block.append(valuesWrap);
+        block.append(addValBtn);
+        optionContainer.append(block);
+    }
+
+    $('#btn-add-variant-option').on('click', function() { addOptionBlock(); });
+
+    function resetVariantOptions() {
+        optionContainer.empty();
+        optionBlockIndex = 0;
+    }
+
+    function renderVariantOptions(optionDefinitions) {
+        resetVariantOptions();
+        if (optionDefinitions && optionDefinitions.length) {
+            optionDefinitions.forEach(function(def) {
+                addOptionBlock({
+                    key: def.option_key || def.key,
+                    label: def.option_label || def.label,
+                    values: (def.values && def.values.length) ? def.values.map(function(v) { return v.value || v; }) : (def.value_list || [])
+                });
+            });
+        }
+    }
+
     function resetForm() {
         form[0].reset();
         form.find('#product-edit-id').val('');
@@ -407,6 +540,7 @@ if (typeof Dropzone !== 'undefined') { Dropzone.autoDiscover = false; }
         errorsDiv.hide().find('ul').empty();
         productDeleteImageIds = [];
         $('#product-existing-images-wrap').hide().find('#product-existing-images').empty();
+        resetVariantOptions();
         if (validator) validator.resetForm();
         if (window.productDropzone) try { window.productDropzone.removeAllFiles(true); } catch (e) {}
     }
@@ -477,6 +611,7 @@ if (typeof Dropzone !== 'undefined') { Dropzone.autoDiscover = false; }
                 form.find('#product-brand').val(p.brand_id || '');
                 form.find('#product-condition').val(p.condition || 'New');
                 form.find('#product-active').prop('checked', !!p.is_active);
+                renderVariantOptions(p.option_definitions || []);
                 form.find('#product-description-modal').val(p.description || '');
                 form.find('#product-payment').val(p.payment_info || defaultPolicyText.payment);
                 form.find('#product-shipping').val(p.shipping_info || defaultPolicyText.shipping);
@@ -587,6 +722,31 @@ if (typeof Dropzone !== 'undefined') { Dropzone.autoDiscover = false; }
             submitBtn.prop('disabled', false).html('<i class="fa fa-check"></i> Save product');
             errorsList.append('<li>Network error. Please try again.</li>');
             errorsDiv.show();
+        });
+    });
+
+    $(document).on('change', '.status-checkbox', function() {
+        var cb = $(this);
+        var url = cb.data('url');
+        var isActive = cb.is(':checked');
+        var label = cb.closest('.product-status-toggle').find('.status-label');
+        var originalChecked = cb.prop('checked');
+        cb.prop('disabled', true);
+        $.ajax({
+            url: url,
+            method: 'PATCH',
+            data: { is_active: isActive ? 1 : 0, _token: '{{ csrf_token() }}' },
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
+        .done(function(data) {
+            label.text(data.is_active ? ' Active ' : ' Inactive ');
+        })
+        .fail(function() {
+            cb.prop('checked', !originalChecked);
+            label.text(originalChecked ? ' Active ' : ' Inactive ');
+        })
+        .always(function() {
+            cb.prop('disabled', false);
         });
     });
 })();
