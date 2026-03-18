@@ -23,7 +23,7 @@
             <a href="{{ route('about') }}" class="px-4 py-3.5 text-sm font-medium hover:text-primary">About Us</a>
             <a href="{{ route('contact') }}" class="px-4 py-3.5 text-sm font-medium hover:text-primary">Contact</a>
             <a href="{{ route('testimonials') }}" class="px-4 py-3.5 text-sm font-medium hover:text-primary">Testimonial</a>
-            <a href="{{ route('faqs') }}" class="px-4 py-3.5 text-sm font-medium hover:text-primary">FAQ'S</a>
+            <a href="{{ route('sell.create') }}" class="px-4 py-3.5 text-sm font-medium hover:text-primary">Sell your phone?</a>
             <a href="{{ route('track-order') }}" class="px-4 py-3.5 text-sm font-medium hover:text-primary">Track Your Order</a>
         </div>
     </div>

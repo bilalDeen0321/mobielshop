@@ -186,6 +186,22 @@
                             <span class="title">Returns</span>
                         </a>
                     </li>
+                    @php
+                        try {
+                            $sellRequestsTotal = \App\Models\SellRequest::count();
+                        } catch (\Throwable $e) {
+                            $sellRequestsTotal = 0;
+                        }
+                    @endphp
+                    <li class="nav-item {{ request()->routeIs('admin.sell-requests.*') ? 'start active open' : '' }}">
+                        <a href="{{ route('admin.sell-requests.index') }}" class="nav-link">
+                            <i class="icon-call-in"></i>
+                            <span class="title">Sell requests</span>
+                            @if($sellRequestsTotal > 0)
+                                <span class="badge badge-info">{{ $sellRequestsTotal }}</span>
+                            @endif
+                        </a>
+                    </li>
                     <li class="nav-item {{ request()->routeIs('admin.reports.*') ? 'start active open' : '' }}">
                         <a href="{{ route('admin.reports.index') }}" class="nav-link">
                             <i class="icon-graph"></i>

@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\SliderImage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class PageController extends Controller
 {
@@ -46,6 +47,31 @@ class PageController extends Controller
     public function contact()
     {
         return view('pages.contact');
+    }
+
+    public function submitContact(Request $request)
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+            'message' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $to = 'Ruislipmobile@gmail.com';
+
+        Mail::raw(
+            "New contact message from Ruislip Mobile:\n\n"
+            ."Name: {$data['name']}\n"
+            ."Email: {$data['email']}\n\n"
+            ."Message:\n{$data['message']}",
+            function ($message) use ($to, $data) {
+                $message->to($to)
+                    ->subject('New contact message from '.$data['name']);
+            }
+        );
+
+        return redirect()->route('contact')
+            ->with('success', 'Thank you. Your message has been sent. We will reply by email soon.');
     }
 
     public function faqs()

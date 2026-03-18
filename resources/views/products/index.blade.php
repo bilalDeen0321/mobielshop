@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', ($brand ?? 'Products') . ' - LowPricePhones')
+@section('title', ($brand ?? 'Products') . ' - Ruislip Mobile')
 
 @section('content')
 <div class="relative h-40 md:h-52 bg-cover bg-center flex items-center justify-center" style="background-image: url('https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=1200&h=400&fit=crop')">

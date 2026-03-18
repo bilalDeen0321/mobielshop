@@ -1,4 +1,4 @@
-# Laravel LowPricePhones - Setup
+# Laravel Ruislip Mobile - Setup
 
 This project has been converted from Node.js/React to Laravel with Blade templates.
 

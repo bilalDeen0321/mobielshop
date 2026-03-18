@@ -29,7 +29,7 @@
 @endphp
 @extends('layouts.app')
 
-@section('title', $product->name . ' - LowPricePhones')
+@section('title', $product->name . ' - Ruislip Mobile')
 
 @section('content')
 <section class="container mx-auto px-4 py-6 md:py-10">

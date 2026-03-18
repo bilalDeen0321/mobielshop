@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\ReportsController as AdminReportsController;
 use App\Http\Controllers\Admin\ReturnController as AdminReturnController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\PosController as AdminPosController;
+use App\Http\Controllers\Admin\SellRequestController as AdminSellRequestController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\SalesController as AdminSalesController;
 use App\Http\Controllers\Admin\SupplierController as AdminSupplierController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SellRequestController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\AccountController;
 use Illuminate\Support\Facades\Route;
@@ -35,10 +37,14 @@ Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product
 
 Route::get('/about', [PageController::class, 'about'])->name('about');
 Route::get('/contact', [PageController::class, 'contact'])->name('contact');
+Route::post('/contact', [PageController::class, 'submitContact'])->name('contact.submit');
 Route::get('/faqs', [PageController::class, 'faqs'])->name('faqs');
 Route::get('/testimonials', [PageController::class, 'testimonials'])->name('testimonials');
 Route::get('/track-order', [PageController::class, 'trackOrder'])->name('track-order');
 Route::get('/terms', [PageController::class, 'terms'])->name('terms');
+
+Route::get('/sell-your-phone', [SellRequestController::class, 'create'])->name('sell.create');
+Route::post('/sell-your-phone', [SellRequestController::class, 'store'])->name('sell.store');
 
 Route::get('/cart', [PageController::class, 'cart'])->name('cart');
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
@@ -126,6 +132,9 @@ Route::prefix('admin-panel')->name('admin.')->group(function () {
         Route::get('reports/top-products', [AdminReportsController::class, 'topProducts'])->name('reports.top-products');
         Route::get('reports/low-stock', [AdminReportsController::class, 'lowStock'])->name('reports.low-stock');
         Route::get('reports/profit', [AdminReportsController::class, 'profit'])->name('reports.profit');
+        Route::get('sell-requests', [AdminSellRequestController::class, 'index'])->name('sell-requests.index');
+        Route::get('sell-requests/{sellRequest}', [AdminSellRequestController::class, 'show'])->name('sell-requests.show');
+        Route::delete('sell-requests/{sellRequest}', [AdminSellRequestController::class, 'destroy'])->name('sell-requests.destroy');
         Route::post('settings/shop', [AdminSettingsController::class, 'updateShop'])->name('settings.shop');
     });
 });

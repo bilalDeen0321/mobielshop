@@ -103,7 +103,7 @@
                     <div class="form-group">
                         <label class="col-md-2 control-label">Shop name</label>
                         <div class="col-md-6">
-                            <input type="text" name="shop_name" class="form-control" value="{{ $shopName }}" placeholder="e.g. LowPricePhones">
+                            <input type="text" name="shop_name" class="form-control" value="{{ $shopName }}" placeholder="e.g. Ruislip Mobile">
                         </div>
                     </div>
                     <div class="form-group">

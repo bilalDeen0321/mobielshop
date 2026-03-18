@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'LowPricePhones - Best Deals on Unlocked Phones')
+@section('title', 'Ruislip Mobile - Best Deals on Unlocked Phones')
 
 @section('content')
 <section class="relative overflow-hidden hero-slider-section">

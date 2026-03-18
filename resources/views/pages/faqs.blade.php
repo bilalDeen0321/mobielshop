@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'FAQs - LowPricePhones')
+@section('title', 'FAQs - Ruislip Mobile')
 
 @section('content')
 <section class="container mx-auto px-4 py-10 max-w-3xl">

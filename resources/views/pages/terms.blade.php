@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Terms & Conditions - LowPricePhones')
+@section('title', 'Terms & Conditions - Ruislip Mobile')
 
 @section('content')
 <section class="container mx-auto px-4 py-10 max-w-3xl space-y-4 text-sm text-gray-600">
     <h1 class="text-3xl font-display font-bold text-gray-900 mb-2">Terms & Conditions</h1>
-    <p>These terms and conditions govern your use of the LowPricePhones storefront. By placing an order you agree to be bound by these terms as well as our Privacy and Shipping policies.</p>
+    <p>These terms and conditions govern your use of the Ruislip Mobile storefront. By placing an order you agree to be bound by these terms as well as our Privacy and Shipping policies.</p>
     <h2 class="text-base font-semibold text-gray-900 mt-4">Orders & pricing</h2>
     <p>All prices are shown in your store currency and include applicable taxes unless stated otherwise. We reserve the right to update prices and product availability at any time.</p>
     <h2 class="text-base font-semibold text-gray-900 mt-4">Returns & warranty</h2>

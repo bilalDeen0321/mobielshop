@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Checkout - LowPricePhones')
+@section('title', 'Checkout - Ruislip Mobile')
 
 @section('content')
 @php
